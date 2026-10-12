@@ -69,8 +69,8 @@ const desktopWidth = computed(() => (ui.sidebarCollapsed ? 'w-[72px]' : 'w-64'))
     <!-- Content -->
     <div :class="cn('flex min-h-screen flex-col transition-[padding] duration-200', 'lg:pl-64', ui.sidebarCollapsed && 'lg:pl-[72px]')">
       <AppHeader />
-      <main class="flex-1 px-4 py-6 sm:px-6 lg:px-8">
-        <div class="mx-auto w-full max-w-7xl space-y-6">
+      <main class="flex-1 px-3 py-3 sm:px-4 sm:py-4 lg:px-6 lg:py-5">
+        <div class="mx-auto w-full max-w-7xl space-y-3 sm:space-y-5">
           <RouterView v-slot="{ Component }">
             <Transition
               mode="out-in"

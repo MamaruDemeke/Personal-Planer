@@ -17,7 +17,7 @@ const props = defineProps({
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="space-y-4 sm:space-y-6">
     <PageHeader :title="props.title" :description="props.description" />
     <Card>
       <CardContent class="pt-6">

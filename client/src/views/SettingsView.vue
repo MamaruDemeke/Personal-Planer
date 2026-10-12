@@ -73,14 +73,14 @@ async function signOut() {
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="space-y-4 sm:space-y-6">
     <PageHeader title="Settings" description="Manage your profile and preferences." />
 
     <div
       v-if="!auth.isConfigured"
       class="rounded-lg border border-warning/30 bg-warning/10 p-3 text-sm text-warning-foreground"
     >
-      Running in <strong>demo mode</strong>. Add your Supabase key to
+      Supabase is not configured. Add your key to
       <code>client/.env</code> to enable accounts, persistence and profile settings.
     </div>
 
@@ -92,8 +92,8 @@ async function signOut() {
         </CardTitle>
         <CardDescription>Your display name and account email.</CardDescription>
       </CardHeader>
-      <CardContent class="space-y-4">
-        <div class="grid gap-4 sm:grid-cols-2">
+      <CardContent class="space-y-3">
+        <div class="grid gap-3 sm:grid-cols-2">
           <div class="space-y-2">
             <Label for="settings-name">Full name</Label>
             <Input id="settings-name" v-model="fullName" placeholder="Your name" :disabled="!auth.isConfigured" />
@@ -137,7 +137,7 @@ async function signOut() {
         </CardTitle>
         <CardDescription>Change your account password.</CardDescription>
       </CardHeader>
-      <CardContent class="space-y-4">
+      <CardContent class="space-y-3">
         <div class="space-y-2 sm:max-w-sm">
           <Label for="settings-password">New password</Label>
           <Input id="settings-password" v-model="newPassword" type="password" placeholder="••••••••" />

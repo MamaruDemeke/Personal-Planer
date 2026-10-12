@@ -107,7 +107,7 @@ async function confirmDelete() {
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="space-y-4 sm:space-y-6">
     <PageHeader title="Notes" description="Capture ideas, meeting notes and references.">
       <template #actions>
         <Button @click="openCreate">
@@ -118,7 +118,7 @@ async function confirmDelete() {
     </PageHeader>
 
     <Card>
-      <CardContent class="flex flex-col gap-3 pt-6 sm:flex-row sm:items-center">
+      <CardContent class="flex flex-col gap-2.5 pt-3.5 sm:flex-row sm:items-center sm:pt-4">
         <div class="relative flex-1">
           <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input v-model="search" placeholder="Search notes..." class="pl-9" />
@@ -143,10 +143,10 @@ async function confirmDelete() {
       </template>
     </EmptyState>
 
-    <div v-else class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+    <div v-else class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
       <Card v-for="note in filtered" :key="note.id" class="group flex flex-col">
         <CardHeader class="flex-row items-start justify-between space-y-0">
-          <CardTitle class="truncate text-base">{{ note.title }}</CardTitle>
+          <CardTitle class="truncate text-sm sm:text-base">{{ note.title }}</CardTitle>
           <div class="flex shrink-0 opacity-0 transition-opacity group-hover:opacity-100">
             <Button variant="ghost" size="icon" aria-label="Edit note" @click="openEdit(note)">
               <Pencil class="h-4 w-4" />
@@ -156,8 +156,8 @@ async function confirmDelete() {
             </Button>
           </div>
         </CardHeader>
-        <CardContent class="flex flex-1 flex-col gap-3">
-          <p class="line-clamp-4 flex-1 text-sm text-muted-foreground">{{ note.content }}</p>
+        <CardContent class="flex flex-1 flex-col gap-2">
+          <p class="line-clamp-3 flex-1 text-sm text-muted-foreground">{{ note.content }}</p>
           <div class="flex flex-wrap items-center gap-1.5">
             <span
               v-if="categoryById[note.categoryId]"

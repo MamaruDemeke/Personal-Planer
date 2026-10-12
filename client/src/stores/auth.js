@@ -5,8 +5,8 @@ import { isSupabaseConfigured, supabase } from '@/lib/supabase'
 /**
  * Authentication store backed by Supabase Auth.
  *
- * When Supabase is not configured the store stays in a safe "demo" mode:
- * `isConfigured` is false and the app remains usable without a session.
+ * When Supabase is not configured `isConfigured` is false and the store stays
+ * in a safe unauthenticated state.
  */
 export const useAuthStore = defineStore('auth', () => {
   const session = ref(null)

@@ -12,13 +12,13 @@ const props = defineProps({
   <div
     :class="
       cn(
-        'flex flex-col items-center justify-center gap-4 rounded-xl border border-dashed bg-card/50 px-6 py-14 text-center',
+        'flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed bg-card/50 px-4 py-10 text-center sm:gap-4 sm:px-6 sm:py-14',
         props.class,
       )
     "
   >
     <div
-      class="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary"
+      class="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 to-info/10 text-primary"
     >
       <slot name="icon" />
     </div>

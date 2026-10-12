@@ -47,6 +47,12 @@ const routes = [
         meta: { title: 'My Tasks', requiresAuth: true },
       },
       {
+        path: 'plans',
+        name: 'plans',
+        component: () => import('@/views/PlansView.vue'),
+        meta: { title: 'Plans', requiresAuth: true },
+      },
+      {
         path: 'calendar',
         name: 'calendar',
         component: () => import('@/views/CalendarView.vue'),
@@ -108,7 +114,7 @@ const router = createRouter({
 })
 
 router.beforeEach((to) => {
-  // Before Supabase is configured the app runs in demo mode and never blocks.
+  // Without Supabase configured there is no auth to enforce.
   if (!isSupabaseConfigured) return true
 
   const auth = useAuthStore()

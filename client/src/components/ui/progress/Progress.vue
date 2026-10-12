@@ -5,6 +5,10 @@ import { cn } from '@/lib/utils'
 const props = defineProps({
   modelValue: { type: Number, default: 0 },
   class: { type: null, default: '' },
+  /** Optional class for the filled indicator (e.g. to tint it per status). */
+  indicatorClass: { type: String, default: '' },
+  /** Optional inline style merged onto the indicator (e.g. backgroundColor). */
+  indicatorStyle: { type: Object, default: () => ({}) },
 })
 </script>
 
@@ -16,8 +20,13 @@ const props = defineProps({
     "
   >
     <ProgressIndicator
-      class="h-full w-full flex-1 bg-primary transition-all duration-500 ease-out"
-      :style="`transform: translateX(-${100 - (modelValue || 0)}%)`"
+      :class="
+        cn(
+          'h-full w-full flex-1 bg-primary transition-all duration-500 ease-out',
+          props.indicatorClass,
+        )
+      "
+      :style="[`transform: translateX(-${100 - (modelValue || 0)}%)`, props.indicatorStyle]"
     />
   </ProgressRoot>
 </template>

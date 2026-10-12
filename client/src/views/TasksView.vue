@@ -1,6 +1,6 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
-import { Plus, Search, Pencil, Trash2, Check, ListTodo } from 'lucide-vue-next'
+import { Plus, Search, Pencil, Trash2, Check, ListTodo, CalendarRange } from 'lucide-vue-next'
 
 import PageHeader from '@/components/common/PageHeader.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
@@ -20,11 +20,13 @@ import { taskSchema } from '@/schemas'
 import { useTasksStore } from '@/stores/tasks'
 import { useCategoriesStore } from '@/stores/categories'
 import { useProjectsStore } from '@/stores/projects'
+import { usePlansStore } from '@/stores/plans'
 import { useToast } from '@/composables/useToast'
 
 const tasksStore = useTasksStore()
 const categoriesStore = useCategoriesStore()
 const projectsStore = useProjectsStore()
+const plansStore = usePlansStore()
 const toast = useToast()
 
 const search = ref('')
@@ -39,7 +41,12 @@ const deleting = ref(null)
 const deleteLoading = ref(false)
 
 onMounted(async () => {
-  await Promise.all([tasksStore.load(), categoriesStore.load(), projectsStore.load()])
+  await Promise.all([
+    tasksStore.load(),
+    categoriesStore.load(),
+    projectsStore.load(),
+    plansStore.load(),
+  ])
 })
 
 const categoryOptions = computed(() => [
@@ -49,6 +56,16 @@ const categoryOptions = computed(() => [
 const projectOptions = computed(() => [
   { label: '— None —', value: '' },
   ...projectsStore.items.map((p) => ({ label: p.name, value: p.id })),
+])
+
+/**
+ * Plans are optional: if the plans table is unavailable (migration not yet
+ * applied) the planner keeps working exactly as before without the field.
+ */
+const plansAvailable = computed(() => plansStore.loaded && !plansStore.error)
+const planOptions = computed(() => [
+  { label: '— None —', value: '' },
+  ...plansStore.items.map((p) => ({ label: p.title, value: p.id })),
 ])
 
 const statusOptions = TASK_STATUSES.map((s) => ({ label: statusMeta[s].label, value: s }))
@@ -61,6 +78,9 @@ const fields = computed(() => [
   { name: 'priority', label: 'Priority', type: 'select', options: priorityOptions },
   { name: 'categoryId', label: 'Category', type: 'select', options: categoryOptions.value },
   { name: 'projectId', label: 'Project', type: 'select', options: projectOptions.value },
+  ...(plansAvailable.value
+    ? [{ name: 'planId', label: 'Plan', type: 'select', options: planOptions.value }]
+    : []),
   { name: 'dueDate', label: 'Due date', type: 'datetime' },
   { name: 'estimatedMinutes', label: 'Estimated minutes', type: 'number', min: 0, placeholder: 'e.g. 30' },
 ])
@@ -73,6 +93,11 @@ const categoryById = computed(() => {
 const projectById = computed(() => {
   const map = {}
   for (const p of projectsStore.items) map[p.id] = p
+  return map
+})
+const planById = computed(() => {
+  const map = {}
+  for (const p of plansStore.items) map[p.id] = p
   return map
 })
 
@@ -153,7 +178,7 @@ async function toggleComplete(task) {
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="space-y-4 sm:space-y-6">
     <PageHeader title="My Tasks" description="Create, organize and complete your tasks.">
       <template #actions>
         <Button @click="openCreate">
@@ -164,7 +189,7 @@ async function toggleComplete(task) {
     </PageHeader>
 
     <Card>
-      <CardContent class="flex flex-col gap-3 pt-6 lg:flex-row lg:items-center">
+      <CardContent class="flex flex-col gap-2.5 pt-3.5 sm:pt-4 lg:flex-row lg:items-center">
         <div class="relative flex-1">
           <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input v-model="search" placeholder="Search tasks..." class="pl-9" />
@@ -208,11 +233,11 @@ async function toggleComplete(task) {
       </template>
     </EmptyState>
 
-    <ul v-else class="space-y-2">
+    <ul v-else class="space-y-1.5">
       <li
         v-for="task in filtered"
         :key="task.id"
-        class="group flex items-start gap-3 rounded-xl border bg-card p-3 transition-colors hover:border-primary/40"
+        class="group flex items-start gap-3 rounded-lg border bg-card p-2.5 transition-colors hover:border-primary/40"
       >
         <button
           type="button"
@@ -241,7 +266,7 @@ async function toggleComplete(task) {
           >
             {{ task.title }}
           </p>
-          <div class="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+          <div class="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
             <span>{{ formatDue(task.dueDate) }}</span>
             <span v-if="categoryById[task.categoryId]" class="inline-flex items-center gap-1">
               <span
@@ -251,6 +276,10 @@ async function toggleComplete(task) {
               {{ categoryById[task.categoryId].name }}
             </span>
             <span v-if="projectById[task.projectId]">· {{ projectById[task.projectId].name }}</span>
+            <span v-if="planById[task.planId]" class="inline-flex items-center gap-1">
+              <CalendarRange class="h-3 w-3" />
+              {{ planById[task.planId].title }}
+            </span>
           </div>
         </div>
 

@@ -1,7 +1,8 @@
 # Planora
 
 **Planora** is a professional, responsive personal planner web application. It helps users manage
-daily tasks, weekly schedules, personal goals, projects, notes, reminders, and productivity reports.
+daily tasks, weekly schedules, personal goals, projects, notes, reminders, time-bound plans, and
+productivity reports.
 
 Built with **Vue 3** (Composition API + `<script setup>`), **Express.js**, and **Supabase**
 (PostgreSQL + Auth + Row Level Security).
@@ -54,8 +55,7 @@ planora/
 
 - Node.js 20+ (developed on Node 24)
 - npm 10+
-- A Supabase project (required from Phase 3 onward). Without keys the app runs in a
-  read-only **demo mode** using in-memory seed data.
+- A Supabase project (required). All data and auth are backed by Supabase.
 
 ## Setup
 
@@ -84,6 +84,7 @@ npm run dev:server
    in order, the contents of:
    - `supabase/migrations/0001_init_schema.sql`
    - `supabase/migrations/0002_row_level_security.sql`
+   - `supabase/migrations/0003_plans.sql`
 
    (Or, with the Supabase CLI linked to your project: `supabase db push`.)
 
@@ -108,6 +109,27 @@ npm run dev:server
 > Auth is done with the Supabase JS SDK in the browser; the Express API re-verifies the
 > access token (`server/src/middleware/auth.js`) and uses RLS for all data access.
 
+## Plans module
+
+Plans are time-bound commitments (daily / weekly / monthly / yearly) with live progress tracking.
+
+- **Schema** — `supabase/migrations/0003_plans.sql` adds the `plan_period` / `plan_status` enums,
+  the `plans` table, a nullable `tasks.plan_id` (with `ON DELETE SET NULL`), RLS owner policies, an
+  extended `assert_task_refs_owner()` guard (a task may only reference a plan you own), and a
+  `sync_plan_completion()` trigger that snapshots `final_progress` and stamps `completed_at` when a
+  plan is marked complete (and clears them when it is reopened).
+- **Progress is derived, never stored** while a plan is in flight: the percentage is computed from
+  the completion of the tasks linked to it (`client/src/lib/planProgress.js`). A completed plan
+  instead shows its snapshot, so history stays stable even if tasks change later.
+- **UI** — a dedicated `/plans` page (`client/src/views/PlansView.vue`) with search, period/status
+  filters (including a derived **Overdue** state), sorting, period-colored progress bars, linked-task
+  checklists, and a completion dialog that captures **actual results** next to the plan's expected
+  results. Tasks can be linked to a plan from `TasksView`, and plan metrics appear on the dashboard
+  and reports.
+- **Graceful degradation** — if migration `0003` has not been applied yet, the rest of the app keeps
+  working: the plans store error is contained, the task→plan field is hidden, and the Plans page
+  shows a one-line reminder to run the migration.
+
 
 ## Current status
 
@@ -122,8 +144,11 @@ npm run dev:server
   project**. Includes full SQL schema (`0001_init_schema.sql`), RLS policies
   (`0002_row_level_security.sql`), the browser Supabase client, a Pinia auth store, guarded routes
   with Login / Register / Forgot-password / Reset-password views, and a server `requireAuth`
-  middleware with `GET /api/auth/me`. Dashboard/module CRUD still reads `client/src/services/seed.js`
-  until Phase 4 wires the API. Non-dashboard views render `ModulePlaceholder`.
+   middleware with `GET /api/auth/me`. Every module performs CRUD directly against Supabase with
+   RLS enforced; there is no demo/seed data.
+- **Plans module** — complete (see [Plans module](#plans-module)). Requires migration
+  `supabase/migrations/0003_plans.sql` to be applied in your Supabase project.
+- **UI polish** — colorful design tokens, gradient accents, denser responsive layouts across every view.
 
 ## Phase roadmap
 
@@ -132,7 +157,7 @@ npm run dev:server
 - [x] Phase 3 — Supabase schema, migrations, RLS, authentication (code complete; run migrations + add keys)
 - [ ] Phase 4 — Task CRUD with search, filters, validation
 - [ ] Phase 5 — Categories, projects, goals, notes, events CRUD
-- [ ] Phase 6 — Calendar, reminders, reports, charts
+- [ ] Phase 6 — Calendar, reminders, reports, charts, **plans with progress tracking**
 - [ ] Phase 7 — Testing, security review, bug fixing
 - [ ] Phase 8 — GitHub integration and production deployment
 

@@ -7,8 +7,10 @@ import {
   Activity,
   AlertTriangle,
   CalendarClock,
+  CalendarRange,
   CheckCircle2,
   Clock,
+  Flag,
   FolderKanban,
   ListTodo,
   Loader,
@@ -27,13 +29,14 @@ import EmptyState from '@/components/common/EmptyState.vue'
 import ResourceFormDialog from '@/components/forms/ResourceFormDialog.vue'
 import TaskStatusBadge from '@/components/tasks/TaskStatusBadge.vue'
 import TaskPriorityBadge from '@/components/tasks/TaskPriorityBadge.vue'
+import PlanProgressBar from '@/components/plans/PlanProgressBar.vue'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { formatDue, formatRelative, formatTime } from '@/lib/format'
-import { PRIORITIES, TASK_STATUSES, priorityMeta, statusMeta } from '@/lib/constants'
+import { PRIORITIES, TASK_STATUSES, planPeriodMeta, priorityMeta, statusMeta } from '@/lib/constants'
 import { taskSchema } from '@/schemas'
 
 const store = useDashboardStore()
@@ -83,8 +86,8 @@ const chart = computed(() => {
 })
 
 const activityIcon = (type) => {
-  if (type === 'task_completed') return CheckCircle2
-  if (type === 'task_created') return Plus
+  if (type === 'task_completed' || type === 'plan_completed') return CheckCircle2
+  if (type === 'task_created' || type === 'plan_created') return Plus
   if (type === 'goal_updated') return Target
   return Activity
 }
@@ -95,7 +98,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="space-y-4 sm:space-y-6">
     <PageHeader
       title="Dashboard"
       description="A snapshot of your tasks, goals and projects."
@@ -134,7 +137,7 @@ onMounted(() => {
     />
 
     <template v-else>
-      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
         <StatCard title="Total tasks" :value="store.totalTasks" :icon="ListTodo" hint="All time" tone="primary" />
         <StatCard
           title="Completed today"
@@ -159,9 +162,23 @@ onMounted(() => {
           tone="warning"
           :hint="`${store.goalCompletion}% avg progress`"
         />
+        <StatCard
+          title="Active plans"
+          :value="store.activePlans.length"
+          :icon="CalendarRange"
+          tone="info"
+          :hint="`${store.planSummary.avgProgress}% avg progress`"
+        />
+        <StatCard
+          title="Overdue plans"
+          :value="store.overduePlans.length"
+          :icon="Flag"
+          tone="destructive"
+          hint="Past deadline"
+        />
       </div>
 
-      <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div class="grid grid-cols-1 gap-3 sm:gap-5 lg:grid-cols-3">
         <Card class="lg:col-span-2">
           <CardHeader class="flex-row items-center justify-between space-y-0">
             <div class="space-y-1">
@@ -199,11 +216,11 @@ onMounted(() => {
             >
               <template #icon><CalendarClock class="h-5 w-5" /></template>
             </EmptyState>
-            <ul v-else class="space-y-3">
+            <ul v-else class="space-y-2">
               <li
                 v-for="event in store.todaysEvents"
                 :key="event.id"
-                class="flex items-start gap-3 rounded-lg border p-3"
+                class="flex items-start gap-3 rounded-lg border p-2.5"
               >
                 <span class="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary" />
                 <div class="min-w-0 flex-1">
@@ -218,7 +235,7 @@ onMounted(() => {
         </Card>
       </div>
 
-      <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div class="grid grid-cols-1 gap-3 sm:gap-5 lg:grid-cols-3">
         <Card class="lg:col-span-2">
           <CardHeader>
             <CardTitle>Upcoming deadlines</CardTitle>
@@ -237,7 +254,7 @@ onMounted(() => {
               <li
                 v-for="task in store.upcomingTasks"
                 :key="task.id"
-                class="flex flex-wrap items-center justify-between gap-3 py-3"
+                class="flex flex-wrap items-center justify-between gap-2 py-2.5"
               >
                 <div class="min-w-0 flex-1">
                   <p class="truncate text-sm font-medium">{{ task.title }}</p>
@@ -260,7 +277,7 @@ onMounted(() => {
             </CardTitle>
             <CardDescription>{{ store.goalCompletion }}% average</CardDescription>
           </CardHeader>
-          <CardContent class="space-y-4">
+          <CardContent class="space-y-3">
             <EmptyState
               v-if="!store.activeGoals.length"
               title="No active goals"
@@ -282,6 +299,47 @@ onMounted(() => {
 
       <Card>
         <CardHeader>
+          <CardTitle class="flex items-center gap-2">
+            <CalendarRange class="h-4 w-4 text-primary" />
+            Plan progress
+          </CardTitle>
+          <CardDescription>
+            {{ store.activePlans.length }} active · {{ store.planSummary.completed }} completed
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <EmptyState
+            v-if="!store.activePlans.length"
+            title="No active plans"
+            description="Create a daily, weekly, monthly or yearly plan to track progress."
+            class="border-0 bg-transparent py-6"
+          >
+            <template #icon><CalendarRange class="h-5 w-5" /></template>
+          </EmptyState>
+          <div v-else class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            <div
+              v-for="row in store.activePlans"
+              :key="row.plan.id"
+              class="space-y-2 rounded-lg border p-3"
+            >
+              <div class="flex items-center justify-between gap-2">
+                <span class="truncate text-sm font-medium">{{ row.plan.title }}</span>
+                <Badge :variant="planPeriodMeta[row.plan.period]?.variant || 'muted'">
+                  {{ planPeriodMeta[row.plan.period]?.label || row.plan.period }}
+                </Badge>
+              </div>
+              <PlanProgressBar
+                :progress="row.progress"
+                :plan="row.plan"
+                :accent="planPeriodMeta[row.plan.period]?.accent || 'var(--color-primary)'"
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle>Recent activity</CardTitle>
           <CardDescription>What happened lately</CardDescription>
         </CardHeader>
@@ -298,9 +356,9 @@ onMounted(() => {
             <li
               v-for="item in store.recentActivities"
               :key="item.id"
-              class="flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-accent/50"
+              class="flex items-center gap-3 rounded-lg px-2 py-1.5 transition-colors hover:bg-accent/50"
             >
-              <span class="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <span class="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary">
                 <component :is="activityIcon(item.type)" class="h-4 w-4" />
               </span>
               <span class="min-w-0 flex-1 truncate text-sm">{{ item.label }}</span>

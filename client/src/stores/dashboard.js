@@ -10,13 +10,14 @@ import {
   subDays,
 } from 'date-fns'
 
-import { activities } from '@/services/seed'
 import { percentage } from '@/lib/utils'
+import { computePlanProgress, summarizePlans } from '@/lib/planProgress'
 import { useTasksStore } from '@/stores/tasks'
 import { useProjectsStore } from '@/stores/projects'
 import { useGoalsStore } from '@/stores/goals'
 import { useEventsStore } from '@/stores/events'
 import { useCategoriesStore } from '@/stores/categories'
+import { usePlansStore } from '@/stores/plans'
 
 /**
  * Aggregates the per-resource stores into the metrics the dashboard renders.
@@ -29,12 +30,14 @@ export const useDashboardStore = defineStore('dashboard', () => {
   const goalsStore = useGoalsStore()
   const eventsStore = useEventsStore()
   const categoriesStore = useCategoriesStore()
+  const plansStore = usePlansStore()
 
   const tasks = computed(() => tasksStore.items)
   const projects = computed(() => projectsStore.items)
   const goals = computed(() => goalsStore.items)
   const events = computed(() => eventsStore.items)
   const categories = computed(() => categoriesStore.items)
+  const plans = computed(() => plansStore.items)
 
   const loading = computed(
     () =>
@@ -42,8 +45,11 @@ export const useDashboardStore = defineStore('dashboard', () => {
       projectsStore.loading ||
       goalsStore.loading ||
       eventsStore.loading ||
-      categoriesStore.loading,
+      categoriesStore.loading ||
+      plansStore.loading,
   )
+  // Plans are an optional module: a not-yet-migrated `plans` table must never
+  // fail the whole dashboard, so its error is intentionally excluded here.
   const error = computed(
     () =>
       tasksStore.error ||
@@ -61,6 +67,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
       goalsStore.load(),
       eventsStore.load(),
       categoriesStore.load(),
+      plansStore.load(),
     ])
     loadedAt.value = new Date().toISOString()
   }
@@ -123,9 +130,45 @@ export const useDashboardStore = defineStore('dashboard', () => {
     return map
   })
 
-  const recentActivities = computed(() =>
-    [...activities].sort((a, b) => new Date(b.at) - new Date(a.at)).slice(0, 6),
-  )
+  /** Recent activity derived from real task records — nothing hardcoded. */
+  const recentActivities = computed(() => {
+    const feed = []
+    for (const task of tasks.value) {
+      if (task.completedAt) {
+        feed.push({
+          id: `completed-${task.id}`,
+          type: 'task_completed',
+          label: `Completed "${task.title}"`,
+          at: task.completedAt,
+        })
+      } else if (task.createdAt) {
+        feed.push({
+          id: `created-${task.id}`,
+          type: 'task_created',
+          label: `Created "${task.title}"`,
+          at: task.createdAt,
+        })
+      }
+    }
+    for (const plan of plans.value) {
+      if (plan.completedAt) {
+        feed.push({
+          id: `plan-completed-${plan.id}`,
+          type: 'plan_completed',
+          label: `Completed plan "${plan.title}"`,
+          at: plan.completedAt,
+        })
+      } else if (plan.createdAt) {
+        feed.push({
+          id: `plan-created-${plan.id}`,
+          type: 'plan_created',
+          label: `Created plan "${plan.title}"`,
+          at: plan.createdAt,
+        })
+      }
+    }
+    return feed.sort((a, b) => new Date(b.at) - new Date(a.at)).slice(0, 6)
+  })
 
   /** Project progress: share of completed tasks per project. */
   const projectProgress = computed(() =>
@@ -141,13 +184,25 @@ export const useDashboardStore = defineStore('dashboard', () => {
     }),
   )
 
+  /** Plans paired with derived progress, using the same helper as the Plans view. */
+  const planProgressList = computed(() =>
+    plans.value.map((plan) => ({ plan, progress: computePlanProgress(plan, tasks.value) })),
+  )
+
+  const activePlans = computed(() =>
+    planProgressList.value.filter((r) => !r.progress.isCompleted && !r.progress.isArchived),
+  )
+  const completedPlans = computed(() => planProgressList.value.filter((r) => r.progress.isCompleted))
+  const overduePlans = computed(() => planProgressList.value.filter((r) => r.progress.isOverdue))
+  const planSummary = computed(() => summarizePlans(plans.value, tasks.value))
+
   return {
     tasks,
     projects,
     goals,
     events,
     categories,
-    activities: ref(activities),
+    plans,
     loading,
     error,
     loadedAt,
@@ -167,5 +222,10 @@ export const useDashboardStore = defineStore('dashboard', () => {
     projectById,
     recentActivities,
     projectProgress,
+    planProgressList,
+    activePlans,
+    completedPlans,
+    overduePlans,
+    planSummary,
   }
 })

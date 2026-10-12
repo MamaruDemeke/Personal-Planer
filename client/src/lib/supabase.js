@@ -12,8 +12,8 @@ const publishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
 
 /**
  * True when real credentials are present. The placeholder values shipped in
- * `.env.example` are detected so the app can run in a read-only demo mode
- * before a Supabase project is connected.
+ * `.env.example` are detected so the app can report that Supabase still needs
+ * to be connected.
  */
 export const isSupabaseConfigured = Boolean(
   url &&

@@ -151,7 +151,7 @@ async function markSent(reminder) {
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="space-y-4 sm:space-y-6">
     <PageHeader title="Reminders" description="Never miss a deadline again.">
       <template #actions>
         <Button @click="openCreate">
@@ -184,14 +184,14 @@ async function markSent(reminder) {
       </template>
     </EmptyState>
 
-    <ul v-else class="space-y-2">
+    <ul v-else class="space-y-1.5">
       <li
         v-for="reminder in filtered"
         :key="reminder.id"
-        class="group flex items-start gap-3 rounded-xl border bg-card p-3"
+        class="group flex items-start gap-3 rounded-lg border bg-card p-2.5"
       >
         <span
-          class="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary"
+          class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary"
         >
           <BellRing class="h-4 w-4" />
         </span>

@@ -136,7 +136,7 @@ async function removeMilestone(milestone) {
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="space-y-4 sm:space-y-6">
     <PageHeader title="Goals" description="Set measurable goals and break them into milestones.">
       <template #actions>
         <Button @click="openCreate">
@@ -159,7 +159,7 @@ async function removeMilestone(milestone) {
       </template>
     </EmptyState>
 
-    <div v-else class="grid gap-4 lg:grid-cols-2">
+    <div v-else class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
       <Card v-for="goal in goalsStore.items" :key="goal.id" class="group">
         <CardHeader class="flex-row items-start justify-between space-y-0">
           <div class="space-y-1">
@@ -169,7 +169,7 @@ async function removeMilestone(milestone) {
                 {{ goalStatusMeta[goal.status]?.label || goal.status }}
               </Badge>
             </CardTitle>
-            <p v-if="goal.description" class="text-sm text-muted-foreground">{{ goal.description }}</p>
+            <p v-if="goal.description" class="line-clamp-2 text-xs text-muted-foreground">{{ goal.description }}</p>
           </div>
           <div class="flex shrink-0 opacity-0 transition-opacity group-hover:opacity-100">
             <Button variant="ghost" size="icon" aria-label="Edit goal" @click="openEdit(goal)">
@@ -180,8 +180,8 @@ async function removeMilestone(milestone) {
             </Button>
           </div>
         </CardHeader>
-        <CardContent class="space-y-3">
-          <div class="flex items-center justify-between text-sm">
+        <CardContent class="space-y-2">
+          <div class="flex items-center justify-between text-xs">
             <span class="text-muted-foreground">
               <template v-if="goal.targetValue != null">
                 {{ goal.currentValue }} / {{ goal.targetValue }}
@@ -201,7 +201,7 @@ async function removeMilestone(milestone) {
             </Button>
           </div>
 
-          <div v-if="expanded === goal.id" class="space-y-2 rounded-lg border bg-muted/30 p-3">
+          <div v-if="expanded === goal.id" class="space-y-1.5 rounded-lg border bg-muted/30 p-2.5">
             <ul v-if="milestonesFor(goal.id).length" class="space-y-1">
               <li
                 v-for="milestone in milestonesFor(goal.id)"

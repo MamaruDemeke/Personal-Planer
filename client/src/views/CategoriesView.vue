@@ -85,7 +85,7 @@ async function confirmDelete() {
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="space-y-4 sm:space-y-6">
     <PageHeader title="Categories" description="Group your tasks, notes and events by color.">
       <template #actions>
         <Button @click="openCreate">
@@ -108,11 +108,11 @@ async function confirmDelete() {
       </template>
     </EmptyState>
 
-    <div v-else class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+    <div v-else class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
       <Card v-for="category in categoriesStore.items" :key="category.id" class="group">
-        <CardContent class="flex items-start gap-3 pt-6">
+        <CardContent class="flex items-start gap-2.5 pt-3.5 sm:pt-4">
           <span
-            class="mt-0.5 h-8 w-8 shrink-0 rounded-lg"
+            class="mt-0.5 h-7 w-7 shrink-0 rounded-lg"
             :style="{ backgroundColor: category.color }"
           />
           <div class="min-w-0 flex-1">

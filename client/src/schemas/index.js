@@ -1,6 +1,8 @@
 import { z } from 'zod'
 import {
   GOAL_STATUSES,
+  PLAN_PERIODS,
+  PLAN_STATUSES,
   PRIORITIES,
   PROJECT_STATUSES,
   REMINDER_CHANNELS,
@@ -122,4 +124,29 @@ export const reminderSchema = z.object({
   remindAt: z.string().min(1, 'Reminder time is required'),
   channel: z.enum(REMINDER_CHANNELS).default('in_app'),
   status: z.enum(REMINDER_STATUSES).default('pending'),
+})
+
+/**
+ * A plan is a time-bounded container (daily/weekly/monthly/yearly) whose
+ * progress is derived from its linked tasks. `actualResults` and the final
+ * percentage are captured through the completion dialog rather than this form.
+ */
+export const planSchema = z.object({
+  title: z
+    .string({ required_error: 'Title is required' })
+    .trim()
+    .min(1, 'Title is required')
+    .max(200, 'Title must be 200 characters or fewer'),
+  description: optionalText(2000),
+  period: z.enum(PLAN_PERIODS).default('weekly'),
+  priority: z.enum(PRIORITIES).default('medium'),
+  status: z.enum(PLAN_STATUSES).default('active'),
+  startDate: optionalDate,
+  deadline: optionalDate,
+  expectedResults: optionalText(2000),
+})
+
+/** Payload for marking a plan complete (captured by the completion dialog). */
+export const planCompletionSchema = z.object({
+  actualResults: optionalText(2000),
 })

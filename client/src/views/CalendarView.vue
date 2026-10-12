@@ -130,7 +130,7 @@ async function confirmDelete() {
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="space-y-4 sm:space-y-6">
     <PageHeader title="Calendar" description="Plan your month and see upcoming events.">
       <template #actions>
         <Button @click="openCreate(null)">
@@ -173,7 +173,7 @@ async function confirmDelete() {
               :key="day.toISOString()"
               :class="
                 cn(
-                  'min-h-[96px] border-b border-r p-1.5 last:border-r-0',
+                  'min-h-[88px] border-b border-r p-1 last:border-r-0',
                   !isSameMonth(day, cursor) && 'bg-muted/20',
                 )
               "

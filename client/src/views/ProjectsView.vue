@@ -97,7 +97,7 @@ async function confirmDelete() {
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="space-y-4 sm:space-y-6">
     <PageHeader title="Projects" description="Track multi-task efforts from start to finish.">
       <template #actions>
         <Button @click="openCreate">
@@ -120,7 +120,7 @@ async function confirmDelete() {
       </template>
     </EmptyState>
 
-    <div v-else class="grid gap-4 lg:grid-cols-2">
+    <div v-else class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
       <Card v-for="row in progress" :key="row.project.id" class="group">
         <CardHeader class="flex-row items-start justify-between space-y-0">
           <div class="space-y-1">
@@ -130,7 +130,7 @@ async function confirmDelete() {
                 {{ projectStatusMeta[row.project.status]?.label || row.project.status }}
               </Badge>
             </CardTitle>
-            <p v-if="row.project.description" class="text-sm text-muted-foreground">
+            <p v-if="row.project.description" class="line-clamp-2 text-xs text-muted-foreground">
               {{ row.project.description }}
             </p>
           </div>
@@ -143,8 +143,8 @@ async function confirmDelete() {
             </Button>
           </div>
         </CardHeader>
-        <CardContent class="space-y-3">
-          <div class="flex items-center justify-between text-sm">
+        <CardContent class="space-y-2">
+          <div class="flex items-center justify-between text-xs">
             <span class="text-muted-foreground">{{ row.done }} / {{ row.total }} tasks done</span>
             <span class="font-medium">{{ row.percent }}%</span>
           </div>

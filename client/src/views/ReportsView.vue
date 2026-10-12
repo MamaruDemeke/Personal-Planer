@@ -7,10 +7,22 @@ import PageHeader from '@/components/common/PageHeader.vue'
 import LoadingState from '@/components/common/LoadingState.vue'
 import StatCard from '@/components/dashboard/StatCard.vue'
 import CompletionChart from '@/components/dashboard/CompletionChart.vue'
+import PlanProgressBar from '@/components/plans/PlanProgressBar.vue'
+import PlanStatusBadge from '@/components/plans/PlanStatusBadge.vue'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
-import { PRIORITIES, TASK_STATUSES, priorityMeta, statusMeta, projectStatusMeta, goalStatusMeta } from '@/lib/constants'
+import {
+  PLAN_PERIODS,
+  PRIORITIES,
+  TASK_STATUSES,
+  planPeriodMeta,
+  priorityMeta,
+  statusMeta,
+  projectStatusMeta,
+  goalStatusMeta,
+} from '@/lib/constants'
+import { derivedPlanStatus } from '@/lib/planProgress'
 import { useDashboardStore } from '@/stores/dashboard'
 
 const store = useDashboardStore()
@@ -61,19 +73,36 @@ const categoryCounts = computed(() => {
     .sort((a, b) => b.count - a.count)
 })
 const categoryMax = computed(() => Math.max(1, ...categoryCounts.value.map((c) => c.count)))
+
+const periodCounts = computed(() =>
+  PLAN_PERIODS.map((p) => ({
+    key: p,
+    label: planPeriodMeta[p].label,
+    accent: planPeriodMeta[p].accent,
+    count: store.plans.filter((plan) => plan.period === p).length,
+  })),
+)
+const periodMax = computed(() => Math.max(1, ...periodCounts.value.map((p) => p.count)))
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="space-y-4 sm:space-y-6">
     <PageHeader title="Reports" description="Insights into your productivity and progress." />
 
     <LoadingState v-if="store.loading && !store.loadedAt" :rows="6" />
     <template v-else>
-      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard title="Total tasks" :value="store.totalTasks" :icon="BarChart3" tone="primary" hint="All time" />
         <StatCard title="Completed" :value="store.completedTasks.length" :icon="BarChart3" tone="success" hint="All time" />
         <StatCard title="Completion rate" :value="store.completionRate" :icon="BarChart3" tone="primary" hint="Completed vs total" />
         <StatCard title="Overdue" :value="store.overdue.length" :icon="BarChart3" tone="destructive" hint="Past due" />
+      </div>
+
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard title="Plans" :value="store.planSummary.total" :icon="BarChart3" tone="info" hint="All periods" />
+        <StatCard title="Active plans" :value="store.planSummary.active" :icon="BarChart3" tone="primary" :hint="`${store.planSummary.avgProgress}% avg progress`" />
+        <StatCard title="Completed plans" :value="store.planSummary.completed" :icon="BarChart3" tone="success" hint="Finished" />
+        <StatCard title="Overdue plans" :value="store.planSummary.overdue" :icon="BarChart3" tone="destructive" hint="Past deadline" />
       </div>
 
       <Card>
@@ -86,13 +115,13 @@ const categoryMax = computed(() => Math.max(1, ...categoryCounts.value.map((c) =
         </CardContent>
       </Card>
 
-      <div class="grid gap-6 lg:grid-cols-2">
+      <div class="grid gap-3 sm:gap-5 lg:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle>Tasks by priority</CardTitle>
             <CardDescription>How your workload is weighted</CardDescription>
           </CardHeader>
-          <CardContent class="space-y-4">
+          <CardContent class="space-y-3">
             <div v-for="row in priorityCounts" :key="row.key" class="space-y-1.5">
               <div class="flex items-center justify-between text-sm">
                 <span>{{ row.label }}</span>
@@ -117,7 +146,7 @@ const categoryMax = computed(() => Math.max(1, ...categoryCounts.value.map((c) =
             <div
               v-for="row in statusCounts"
               :key="row.key"
-              class="flex items-center justify-between rounded-lg border p-3"
+              class="flex items-center justify-between rounded-lg border p-2.5"
             >
               <Badge :variant="row.variant">{{ row.label }}</Badge>
               <span class="text-sm font-medium">{{ row.count }}</span>
@@ -126,13 +155,13 @@ const categoryMax = computed(() => Math.max(1, ...categoryCounts.value.map((c) =
         </Card>
       </div>
 
-      <div class="grid gap-6 lg:grid-cols-2">
+      <div class="grid gap-3 sm:gap-5 lg:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle>Tasks by category</CardTitle>
             <CardDescription>Where your effort goes</CardDescription>
           </CardHeader>
-          <CardContent class="space-y-4">
+          <CardContent class="space-y-3">
             <p v-if="!categoryCounts.length" class="text-sm text-muted-foreground">No categorized tasks yet.</p>
             <div v-for="row in categoryCounts" :key="row.name" class="space-y-1.5">
               <div class="flex items-center justify-between text-sm">
@@ -157,7 +186,7 @@ const categoryMax = computed(() => Math.max(1, ...categoryCounts.value.map((c) =
             <CardTitle>Project progress</CardTitle>
             <CardDescription>Completion by project</CardDescription>
           </CardHeader>
-          <CardContent class="space-y-4">
+          <CardContent class="space-y-3">
             <p v-if="!store.projectProgress.length" class="text-sm text-muted-foreground">No projects yet.</p>
             <div v-for="p in store.projectProgress" :key="p.id" class="space-y-1.5">
               <div class="flex items-center justify-between text-sm">
@@ -180,7 +209,7 @@ const categoryMax = computed(() => Math.max(1, ...categoryCounts.value.map((c) =
           <CardTitle>Goal progress</CardTitle>
           <CardDescription>Average {{ store.goalCompletion }}% across active goals</CardDescription>
         </CardHeader>
-        <CardContent class="space-y-4">
+        <CardContent class="space-y-3">
           <p v-if="!store.goals.length" class="text-sm text-muted-foreground">No goals yet.</p>
           <div v-for="goal in store.goals" :key="goal.id" class="space-y-1.5">
             <div class="flex items-center justify-between text-sm">
@@ -196,6 +225,60 @@ const categoryMax = computed(() => Math.max(1, ...categoryCounts.value.map((c) =
           </div>
         </CardContent>
       </Card>
+
+      <div class="grid gap-3 sm:gap-5 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Plans by period</CardTitle>
+            <CardDescription>Daily vs weekly vs monthly vs yearly</CardDescription>
+          </CardHeader>
+          <CardContent class="space-y-3">
+            <div v-for="row in periodCounts" :key="row.key" class="space-y-1.5">
+              <div class="flex items-center justify-between text-sm">
+                <span>{{ row.label }}</span>
+                <span class="text-muted-foreground">{{ row.count }}</span>
+              </div>
+              <div class="h-2 overflow-hidden rounded-full bg-muted">
+                <div
+                  class="h-full rounded-full"
+                  :style="{ width: `${(row.count / periodMax) * 100}%`, backgroundColor: row.accent }"
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Plan progress</CardTitle>
+            <CardDescription>Completion tracked from linked tasks</CardDescription>
+          </CardHeader>
+          <CardContent class="space-y-3">
+            <p v-if="!store.planProgressList.length" class="text-sm text-muted-foreground">No plans yet.</p>
+            <div
+              v-for="row in store.planProgressList"
+              :key="row.plan.id"
+              class="space-y-1.5 rounded-lg border p-2.5"
+            >
+              <div class="flex flex-wrap items-center justify-between gap-2 text-sm">
+                <span class="flex items-center gap-2">
+                  {{ row.plan.title }}
+                  <Badge :variant="planPeriodMeta[row.plan.period]?.variant || 'muted'">
+                    {{ planPeriodMeta[row.plan.period]?.label || row.plan.period }}
+                  </Badge>
+                  <PlanStatusBadge :status="derivedPlanStatus(row.plan, row.progress)" />
+                </span>
+                <span class="text-muted-foreground">{{ row.progress.completed }}/{{ row.progress.total }}</span>
+              </div>
+              <PlanProgressBar
+                :progress="row.progress"
+                :plan="row.plan"
+                :accent="planPeriodMeta[row.plan.period]?.accent || 'var(--color-primary)'"
+              />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </template>
   </div>
 </template>

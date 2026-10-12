@@ -56,8 +56,12 @@ async function onSignOut() {
 
 <template>
   <header
-    class="sticky top-0 z-30 flex h-16 items-center gap-2 border-b bg-background/80 px-4 backdrop-blur-md sm:px-6"
+    class="sticky top-0 z-30 flex h-14 items-center gap-2 border-b bg-background/80 px-3 backdrop-blur-md sm:h-16 sm:px-5 lg:px-7"
   >
+    <span
+      class="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent"
+      aria-hidden="true"
+    />
     <Button
       variant="ghost"
       size="icon"
