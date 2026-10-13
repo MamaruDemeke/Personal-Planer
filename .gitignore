@@ -22,7 +22,6 @@ pnpm-debug.log*
 Thumbs.db
 
 # Environment files (never commit real credentials)
-.env
 .env.*
 !.env.example
 
