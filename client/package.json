@@ -1,9 +1,9 @@
 {
-  "name": "planora-client",
+  "name": "worker-planner-client",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Planora - Personal Planner web application (Vue 3 + Vite frontend)",
+  "description": "Worker Planner - Vue 3 + Vite frontend",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

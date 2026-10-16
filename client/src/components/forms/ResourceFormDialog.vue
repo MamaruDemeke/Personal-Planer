@@ -55,6 +55,16 @@ function toInput(value, type) {
   return value
 }
 
+/** Turn a #rrggbb colour into an rgba() string at the given alpha. */
+function tint(hex, alpha) {
+  const value = String(hex ?? '').replace('#', '')
+  if (value.length !== 6) return 'transparent'
+  const r = parseInt(value.slice(0, 2), 16)
+  const g = parseInt(value.slice(2, 4), 16)
+  const b = parseInt(value.slice(4, 6), 16)
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`
+}
+
 function buildInitial() {
   const values = {}
   for (const field of props.fields) {
@@ -166,6 +176,41 @@ const dialogTitle = computed(() => props.title)
                 {{ opt.label }}
               </option>
             </Select>
+
+            <div v-else-if="field.type === 'segmented'" class="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <button
+                v-for="opt in field.options"
+                :key="opt.value"
+                type="button"
+                class="flex flex-col items-start gap-1.5 rounded-lg border p-2.5 text-left transition-all"
+                :class="
+                  models[field.name] === opt.value
+                    ? 'shadow-sm'
+                    : 'hover:border-primary/40 hover:bg-muted/40'
+                "
+                :style="
+                  models[field.name] === opt.value
+                    ? {
+                        borderColor: opt.color,
+                        backgroundColor: tint(opt.color, 0.1),
+                        boxShadow: `0 0 0 2px ${tint(opt.color, 0.35)}`,
+                      }
+                    : {}
+                "
+                @click="models[field.name] = opt.value"
+              >
+                <span
+                  class="flex h-8 w-8 items-center justify-center rounded-md"
+                  :style="{ backgroundColor: tint(opt.color, 0.18), color: opt.color }"
+                >
+                  <component :is="opt.icon" v-if="opt.icon" class="h-4 w-4" />
+                </span>
+                <span class="text-sm font-semibold">{{ opt.label }}</span>
+                <span v-if="opt.description" class="text-[11px] text-muted-foreground">
+                  {{ opt.description }}
+                </span>
+              </button>
+            </div>
 
             <div v-else-if="field.type === 'color'" class="flex items-center gap-2">
               <input

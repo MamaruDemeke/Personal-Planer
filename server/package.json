@@ -1,9 +1,9 @@
 {
-  "name": "planora-server",
+  "name": "worker-planner-server",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Planora REST API (Express + Supabase).",
+  "description": "Worker Planner REST API (Express + Supabase).",
   "main": "src/server.js",
   "scripts": {
     "dev": "node --watch src/server.js",

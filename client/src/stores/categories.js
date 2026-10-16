@@ -1,5 +1,3 @@
-import { createResourceStore } from '@/stores/createResourceStore'
+import { createApiResourceStore } from '@/stores/createApiResourceStore'
 
-export const useCategoriesStore = createResourceStore('categories', {
-  table: 'categories',
-})
+export const useCategoriesStore = createApiResourceStore('categories', { basePath: '/categories' })

@@ -1,87 +1,82 @@
 -- =============================================================================
--- Planora — 0002_row_level_security
--- Enables RLS on every table and restricts rows to their owner (auth.uid()).
--- These policies are enforced by PostgreSQL itself, so direct access from the
--- browser (with the publishable/anon key) cannot read or mutate other users'
--- data even if the frontend is tampered with.
+-- Worker Planner — 0002_row_level_security
+-- =============================================================================
+-- Row Level Security is the source of truth for data isolation: a user can only
+-- read/write their own rows. The server queries Supabase with the caller's
+-- access token (see server/src/middleware/auth.js), so these policies apply to
+-- every API request.
 -- =============================================================================
 
-alter table public.profiles         enable row level security;
-alter table public.categories       enable row level security;
-alter table public.projects         enable row level security;
-alter table public.tasks            enable row level security;
-alter table public.goals            enable row level security;
-alter table public.goal_milestones  enable row level security;
-alter table public.events           enable row level security;
-alter table public.notes            enable row level security;
-alter table public.reminders        enable row level security;
-alter table public.activity_logs    enable row level security;
+-- -----------------------------------------------------------------------------
+-- profiles — a user sees and edits only their own profile.
+-- -----------------------------------------------------------------------------
+alter table public.profiles enable row level security;
 
--- -----------------------------------------------------------------------------
--- profiles — identified by id (== auth.uid()) rather than user_id
--- -----------------------------------------------------------------------------
 drop policy if exists "profiles_select_own" on public.profiles;
-create policy "profiles_select_own"
-  on public.profiles for select
-  using (id = auth.uid());
+create policy "profiles_select_own" on public.profiles
+  for select using (auth.uid() = id);
 
 drop policy if exists "profiles_insert_own" on public.profiles;
-create policy "profiles_insert_own"
-  on public.profiles for insert
-  with check (id = auth.uid());
+create policy "profiles_insert_own" on public.profiles
+  for insert with check (auth.uid() = id);
 
 drop policy if exists "profiles_update_own" on public.profiles;
-create policy "profiles_update_own"
-  on public.profiles for update
-  using (id = auth.uid())
-  with check (id = auth.uid());
-
-drop policy if exists "profiles_delete_own" on public.profiles;
-create policy "profiles_delete_own"
-  on public.profiles for delete
-  using (id = auth.uid());
+create policy "profiles_update_own" on public.profiles
+  for update using (auth.uid() = id) with check (auth.uid() = id);
 
 -- -----------------------------------------------------------------------------
--- user_id-scoped tables — identical policy set for each
+-- Owner-only policy helper pattern for the user-owned tables.
 -- -----------------------------------------------------------------------------
-do $$
-declare
-  tbl text;
-  tables text[] := array[
-    'categories',
-    'projects',
-    'tasks',
-    'goals',
-    'goal_milestones',
-    'events',
-    'notes',
-    'reminders',
-    'activity_logs'
-  ];
-begin
-  foreach tbl in array tables loop
-    execute format('drop policy if exists %I on public.%I', tbl || '_select_own', tbl);
-    execute format(
-      'create policy %I on public.%I for select using (user_id = auth.uid())',
-      tbl || '_select_own', tbl
-    );
+alter table public.categories enable row level security;
 
-    execute format('drop policy if exists %I on public.%I', tbl || '_insert_own', tbl);
-    execute format(
-      'create policy %I on public.%I for insert with check (user_id = auth.uid())',
-      tbl || '_insert_own', tbl
-    );
+drop policy if exists "categories_select_own" on public.categories;
+create policy "categories_select_own" on public.categories
+  for select using (auth.uid() = user_id);
 
-    execute format('drop policy if exists %I on public.%I', tbl || '_update_own', tbl);
-    execute format(
-      'create policy %I on public.%I for update using (user_id = auth.uid()) with check (user_id = auth.uid())',
-      tbl || '_update_own', tbl
-    );
+drop policy if exists "categories_insert_own" on public.categories;
+create policy "categories_insert_own" on public.categories
+  for insert with check (auth.uid() = user_id);
 
-    execute format('drop policy if exists %I on public.%I', tbl || '_delete_own', tbl);
-    execute format(
-      'create policy %I on public.%I for delete using (user_id = auth.uid())',
-      tbl || '_delete_own', tbl
-    );
-  end loop;
-end $$;
+drop policy if exists "categories_update_own" on public.categories;
+create policy "categories_update_own" on public.categories
+  for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+drop policy if exists "categories_delete_own" on public.categories;
+create policy "categories_delete_own" on public.categories
+  for delete using (auth.uid() = user_id);
+
+alter table public.tasks enable row level security;
+
+drop policy if exists "tasks_select_own" on public.tasks;
+create policy "tasks_select_own" on public.tasks
+  for select using (auth.uid() = user_id);
+
+drop policy if exists "tasks_insert_own" on public.tasks;
+create policy "tasks_insert_own" on public.tasks
+  for insert with check (auth.uid() = user_id);
+
+drop policy if exists "tasks_update_own" on public.tasks;
+create policy "tasks_update_own" on public.tasks
+  for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+drop policy if exists "tasks_delete_own" on public.tasks;
+create policy "tasks_delete_own" on public.tasks
+  for delete using (auth.uid() = user_id);
+
+alter table public.reports enable row level security;
+
+drop policy if exists "reports_select_own" on public.reports;
+create policy "reports_select_own" on public.reports
+  for select using (auth.uid() = user_id);
+
+drop policy if exists "reports_insert_own" on public.reports;
+create policy "reports_insert_own" on public.reports
+  for insert with check (auth.uid() = user_id);
+
+drop policy if exists "reports_update_own" on public.reports;
+create policy "reports_update_own" on public.reports
+  for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+drop policy if exists "reports_delete_own" on public.reports;
+create policy "reports_delete_own" on public.reports
+  for delete using (auth.uid() = user_id);

@@ -15,6 +15,14 @@ export const env = {
     .split(',')
     .map((origin) => origin.trim())
     .filter(Boolean),
+  /**
+   * Accounts with these email addresses are treated as administrators and are
+   * promoted automatically (requires the service-role key). Comma-separated.
+   */
+  adminEmails: (process.env.ADMIN_EMAILS ?? '')
+    .split(',')
+    .map((email) => email.trim().toLowerCase())
+    .filter(Boolean),
   supabase: {
     url: process.env.SUPABASE_URL ?? '',
     publishableKey: process.env.SUPABASE_PUBLISHABLE_KEY ?? '',

@@ -42,3 +42,12 @@ export function getAdminClient() {
     auth: { persistSession: false, autoRefreshToken: false },
   })
 }
+
+/** Like `getAdminClient`, but returns null when no service-role key is set. */
+export function tryGetAdminClient() {
+  try {
+    return getAdminClient()
+  } catch {
+    return null
+  }
+}

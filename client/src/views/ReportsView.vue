@@ -1,284 +1,252 @@
 <script setup>
-import { computed, onMounted } from 'vue'
-import { format, isSameDay, subDays } from 'date-fns'
-import { BarChart3 } from 'lucide-vue-next'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { format } from 'date-fns'
+import { FileText, Loader2, Printer, Save, Sparkles, Trash2, Download } from 'lucide-vue-next'
 
 import PageHeader from '@/components/common/PageHeader.vue'
+import EmptyState from '@/components/common/EmptyState.vue'
 import LoadingState from '@/components/common/LoadingState.vue'
-import StatCard from '@/components/dashboard/StatCard.vue'
-import CompletionChart from '@/components/dashboard/CompletionChart.vue'
-import PlanProgressBar from '@/components/plans/PlanProgressBar.vue'
-import PlanStatusBadge from '@/components/plans/PlanStatusBadge.vue'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Progress } from '@/components/ui/progress'
-import {
-  PLAN_PERIODS,
-  PRIORITIES,
-  TASK_STATUSES,
-  planPeriodMeta,
-  priorityMeta,
-  statusMeta,
-  projectStatusMeta,
-  goalStatusMeta,
-} from '@/lib/constants'
-import { derivedPlanStatus } from '@/lib/planProgress'
-import { useDashboardStore } from '@/stores/dashboard'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import Textarea from '@/components/ui/Textarea.vue'
+import { useReportsStore } from '@/stores/reports'
+import { useToast } from '@/composables/useToast'
+import { formatDate, formatRelative } from '@/lib/format'
 
-const store = useDashboardStore()
+const reports = useReportsStore()
+const toast = useToast()
+
+const SECTIONS = [
+  { key: 'completed', label: 'Work completed' },
+  { key: 'ongoing', label: 'Work in progress' },
+  { key: 'pending', label: 'Pending work' },
+  { key: 'blockers', label: 'Blockers / issues' },
+  { key: 'achievements', label: 'Achievements' },
+  { key: 'tomorrowPlan', label: "Tomorrow's plan" },
+]
+
+const todayStr = format(new Date(), 'yyyy-MM-dd')
+
+const form = reactive({
+  reportDate: todayStr,
+  completed: '',
+  ongoing: '',
+  pending: '',
+  blockers: '',
+  achievements: '',
+  tomorrowPlan: '',
+})
+
+const currentId = ref(null)
+const loadingReport = ref(false)
+const saving = ref(false)
+const suggesting = ref(false)
 
 onMounted(() => {
-  if (!store.loadedAt) store.load()
+  reports.load({}, { force: true }).catch(() => {})
+  loadReport(form.reportDate)
 })
 
-const priorityCounts = computed(() =>
-  PRIORITIES.map((p) => ({
-    key: p,
-    label: priorityMeta[p].label,
-    count: store.tasks.filter((t) => t.priority === p).length,
-  })),
-)
-const priorityMax = computed(() => Math.max(1, ...priorityCounts.value.map((p) => p.count)))
-
-const statusCounts = computed(() =>
-  TASK_STATUSES.map((s) => ({
-    key: s,
-    label: statusMeta[s].label,
-    variant: statusMeta[s].variant,
-    count: store.tasks.filter((t) => t.status === s).length,
-  })),
+watch(
+  () => form.reportDate,
+  (date) => {
+    if (date) loadReport(date)
+  },
 )
 
-const trendChart = computed(() => {
-  const labels = []
-  const completed = []
-  const created = []
-  for (let i = 29; i >= 0; i--) {
-    const day = subDays(new Date(), i)
-    labels.push(format(day, 'MMM d'))
-    completed.push(store.tasks.filter((t) => t.completedAt && isSameDay(new Date(t.completedAt), day)).length)
-    created.push(store.tasks.filter((t) => t.createdAt && isSameDay(new Date(t.createdAt), day)).length)
+async function loadReport(date) {
+  loadingReport.value = true
+  try {
+    const report = await reports.getByDate(date)
+    currentId.value = report?.id ?? null
+    for (const { key } of SECTIONS) form[key] = report?.[key] ?? ''
+  } catch (err) {
+    toast.error('Could not load report', err?.message)
+  } finally {
+    loadingReport.value = false
   }
-  return { labels, completed, created }
-})
+}
 
-const categoryCounts = computed(() => {
-  const counts = new Map()
-  for (const t of store.tasks) {
-    if (!t.categoryId) continue
-    counts.set(t.categoryId, (counts.get(t.categoryId) || 0) + 1)
+async function suggest() {
+  suggesting.value = true
+  try {
+    const s = await reports.suggest(form.reportDate)
+    form.completed = s.completed || form.completed
+    form.ongoing = s.ongoing || form.ongoing
+    form.pending = s.pending || form.pending
+    toast.success('Filled from your tasks')
+  } catch (err) {
+    toast.error('Could not build suggestions', err?.message)
+  } finally {
+    suggesting.value = false
   }
-  return [...counts.entries()]
-    .map(([id, count]) => ({ name: store.categoryById[id]?.name || 'Unknown', color: store.categoryById[id]?.color, count }))
-    .sort((a, b) => b.count - a.count)
-})
-const categoryMax = computed(() => Math.max(1, ...categoryCounts.value.map((c) => c.count)))
+}
 
-const periodCounts = computed(() =>
-  PLAN_PERIODS.map((p) => ({
-    key: p,
-    label: planPeriodMeta[p].label,
-    accent: planPeriodMeta[p].accent,
-    count: store.plans.filter((plan) => plan.period === p).length,
-  })),
-)
-const periodMax = computed(() => Math.max(1, ...periodCounts.value.map((p) => p.count)))
+async function save() {
+  saving.value = true
+  try {
+    const row = await reports.save({ ...form })
+    currentId.value = row.id
+    toast.success('Report saved')
+  } catch (err) {
+    toast.error('Could not save report', err?.message)
+  } finally {
+    saving.value = false
+  }
+}
+
+async function remove() {
+  if (!currentId.value) return
+  try {
+    await reports.remove(currentId.value)
+    currentId.value = null
+    for (const { key } of SECTIONS) form[key] = ''
+    toast.success('Report deleted')
+  } catch (err) {
+    toast.error('Could not delete report', err?.message)
+  }
+}
+
+function selectReport(report) {
+  form.reportDate = report.reportDate
+}
+
+const isEmptyReport = computed(() => SECTIONS.every(({ key }) => !form[key]?.trim()))
+
+function exportMarkdown() {
+  const lines = [`# Daily Work Report — ${formatDate(form.reportDate)}`, '']
+  for (const { key, label } of SECTIONS) {
+    lines.push(`## ${label}`, form[key]?.trim() || '—', '')
+  }
+  const blob = new Blob([lines.join('\n')], { type: 'text/markdown;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `report-${form.reportDate}.md`
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+function printReport() {
+  const rows = SECTIONS.map(({ key, label }) => {
+    const value = (form[key]?.trim() || '—').replace(/[<>&]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' })[c])
+    return `<section><h2>${label}</h2><p>${value.replace(/\n/g, '<br>')}</p></section>`
+  }).join('')
+  const html = `<!doctype html><html><head><meta charset="utf-8"><title>Daily report ${form.reportDate}</title>
+    <style>body{font-family:system-ui,Segoe UI,Arial,sans-serif;max-width:720px;margin:40px auto;padding:0 16px;color:#111}
+    h1{font-size:20px;border-bottom:2px solid #0d9488;padding-bottom:8px}h2{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:#0d9488;margin:20px 0 4px}
+    p{white-space:normal;margin:0;line-height:1.5}</style></head><body>
+    <h1>Daily Work Report — ${formatDate(form.reportDate)}</h1>${rows}</body></html>`
+  const w = window.open('', '_blank', 'width=800,height=900')
+  if (!w) {
+    toast.error('Allow pop-ups to print')
+    return
+  }
+  w.document.write(html)
+  w.document.close()
+  w.focus()
+  w.print()
+}
 </script>
 
 <template>
   <div class="space-y-4 sm:space-y-6">
-    <PageHeader title="Reports" description="Insights into your productivity and progress." />
+    <PageHeader title="Daily Reports" description="Record what you did, blocked on, and plan for tomorrow.">
+      <template #actions>
+        <Button variant="outline" :disabled="suggesting" @click="suggest">
+          <Loader2 v-if="suggesting" class="h-4 w-4 animate-spin" />
+          <Sparkles v-else class="h-4 w-4" />
+          Suggest from tasks
+        </Button>
+        <Button variant="outline" @click="exportMarkdown">
+          <Download class="h-4 w-4" />
+          Export
+        </Button>
+        <Button variant="outline" @click="printReport">
+          <Printer class="h-4 w-4" />
+          Print
+        </Button>
+        <Button :disabled="saving" @click="save">
+          <Loader2 v-if="saving" class="h-4 w-4 animate-spin" />
+          <Save v-else class="h-4 w-4" />
+          Save
+        </Button>
+      </template>
+    </PageHeader>
 
-    <LoadingState v-if="store.loading && !store.loadedAt" :rows="6" />
-    <template v-else>
-      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard title="Total tasks" :value="store.totalTasks" :icon="BarChart3" tone="primary" hint="All time" />
-        <StatCard title="Completed" :value="store.completedTasks.length" :icon="BarChart3" tone="success" hint="All time" />
-        <StatCard title="Completion rate" :value="store.completionRate" :icon="BarChart3" tone="primary" hint="Completed vs total" />
-        <StatCard title="Overdue" :value="store.overdue.length" :icon="BarChart3" tone="destructive" hint="Past due" />
-      </div>
-
-      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard title="Plans" :value="store.planSummary.total" :icon="BarChart3" tone="info" hint="All periods" />
-        <StatCard title="Active plans" :value="store.planSummary.active" :icon="BarChart3" tone="primary" :hint="`${store.planSummary.avgProgress}% avg progress`" />
-        <StatCard title="Completed plans" :value="store.planSummary.completed" :icon="BarChart3" tone="success" hint="Finished" />
-        <StatCard title="Overdue plans" :value="store.planSummary.overdue" :icon="BarChart3" tone="destructive" hint="Past deadline" />
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Tasks created vs completed</CardTitle>
-          <CardDescription>Last 30 days</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <CompletionChart :labels="trendChart.labels" :completed="trendChart.completed" :created="trendChart.created" />
-        </CardContent>
-      </Card>
-
-      <div class="grid gap-3 sm:gap-5 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Tasks by priority</CardTitle>
-            <CardDescription>How your workload is weighted</CardDescription>
-          </CardHeader>
-          <CardContent class="space-y-3">
-            <div v-for="row in priorityCounts" :key="row.key" class="space-y-1.5">
-              <div class="flex items-center justify-between text-sm">
-                <span>{{ row.label }}</span>
-                <span class="text-muted-foreground">{{ row.count }}</span>
-              </div>
-              <div class="h-2 overflow-hidden rounded-full bg-muted">
-                <div
-                  class="h-full rounded-full bg-primary"
-                  :style="{ width: `${(row.count / priorityMax) * 100}%` }"
-                />
-              </div>
+    <div class="grid gap-4 lg:grid-cols-3">
+      <Card class="lg:col-span-2">
+        <CardContent class="space-y-4 pt-4">
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div class="space-y-1.5">
+              <Label for="report-date">Report date</Label>
+              <Input id="report-date" v-model="form.reportDate" type="date" class="w-full sm:w-56" />
             </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Tasks by status</CardTitle>
-            <CardDescription>Current distribution</CardDescription>
-          </CardHeader>
-          <CardContent class="space-y-3">
-            <div
-              v-for="row in statusCounts"
-              :key="row.key"
-              class="flex items-center justify-between rounded-lg border p-2.5"
-            >
-              <Badge :variant="row.variant">{{ row.label }}</Badge>
-              <span class="text-sm font-medium">{{ row.count }}</span>
+            <div class="flex items-end">
+              <Button
+                v-if="currentId"
+                variant="outline"
+                class="text-destructive"
+                @click="remove"
+              >
+                <Trash2 class="h-4 w-4" />
+                Delete this report
+              </Button>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
 
-      <div class="grid gap-3 sm:gap-5 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Tasks by category</CardTitle>
-            <CardDescription>Where your effort goes</CardDescription>
-          </CardHeader>
-          <CardContent class="space-y-3">
-            <p v-if="!categoryCounts.length" class="text-sm text-muted-foreground">No categorized tasks yet.</p>
-            <div v-for="row in categoryCounts" :key="row.name" class="space-y-1.5">
-              <div class="flex items-center justify-between text-sm">
-                <span class="flex items-center gap-2">
-                  <span class="h-2.5 w-2.5 rounded-full" :style="{ backgroundColor: row.color }" />
-                  {{ row.name }}
-                </span>
-                <span class="text-muted-foreground">{{ row.count }}</span>
-              </div>
-              <div class="h-2 overflow-hidden rounded-full bg-muted">
-                <div
-                  class="h-full rounded-full"
-                  :style="{ width: `${(row.count / categoryMax) * 100}%`, backgroundColor: row.color }"
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+          <div v-if="loadingReport" class="py-4">
+            <Loader2 class="h-5 w-5 animate-spin text-muted-foreground" />
+          </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Project progress</CardTitle>
-            <CardDescription>Completion by project</CardDescription>
-          </CardHeader>
-          <CardContent class="space-y-3">
-            <p v-if="!store.projectProgress.length" class="text-sm text-muted-foreground">No projects yet.</p>
-            <div v-for="p in store.projectProgress" :key="p.id" class="space-y-1.5">
-              <div class="flex items-center justify-between text-sm">
-                <span class="flex items-center gap-2">
-                  {{ p.name }}
-                  <Badge :variant="projectStatusMeta[p.status]?.variant || 'muted'">
-                    {{ projectStatusMeta[p.status]?.label || p.status }}
-                  </Badge>
-                </span>
-                <span class="text-muted-foreground">{{ p.done }}/{{ p.total }}</span>
-              </div>
-              <Progress :model-value="p.percent" />
+          <div v-else class="space-y-4">
+            <div v-for="section in SECTIONS" :key="section.key" class="space-y-1.5">
+              <Label :for="`report-${section.key}`">{{ section.label }}</Label>
+              <Textarea
+                :id="`report-${section.key}`"
+                v-model="form[section.key]"
+                :rows="3"
+                :placeholder="`Write the ${section.label.toLowerCase()} here...`"
+              />
             </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Goal progress</CardTitle>
-          <CardDescription>Average {{ store.goalCompletion }}% across active goals</CardDescription>
-        </CardHeader>
-        <CardContent class="space-y-3">
-          <p v-if="!store.goals.length" class="text-sm text-muted-foreground">No goals yet.</p>
-          <div v-for="goal in store.goals" :key="goal.id" class="space-y-1.5">
-            <div class="flex items-center justify-between text-sm">
-              <span class="flex items-center gap-2">
-                {{ goal.title }}
-                <Badge :variant="goalStatusMeta[goal.status]?.variant || 'muted'">
-                  {{ goalStatusMeta[goal.status]?.label || goal.status }}
-                </Badge>
-              </span>
-              <span class="text-muted-foreground">{{ goal.progress }}%</span>
-            </div>
-            <Progress :model-value="goal.progress" />
           </div>
         </CardContent>
       </Card>
 
-      <div class="grid gap-3 sm:gap-5 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Plans by period</CardTitle>
-            <CardDescription>Daily vs weekly vs monthly vs yearly</CardDescription>
-          </CardHeader>
-          <CardContent class="space-y-3">
-            <div v-for="row in periodCounts" :key="row.key" class="space-y-1.5">
-              <div class="flex items-center justify-between text-sm">
-                <span>{{ row.label }}</span>
-                <span class="text-muted-foreground">{{ row.count }}</span>
-              </div>
-              <div class="h-2 overflow-hidden rounded-full bg-muted">
-                <div
-                  class="h-full rounded-full"
-                  :style="{ width: `${(row.count / periodMax) * 100}%`, backgroundColor: row.accent }"
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle class="text-base">Recent reports</CardTitle>
+        </CardHeader>
+        <CardContent class="pt-0">
+          <LoadingState v-if="reports.loading && !reports.loaded" :rows="4" />
+          <EmptyState
+            v-else-if="!reports.items.length"
+            title="No reports yet"
+            description="Saved reports will appear here."
+            class="py-8"
+          >
+            <template #icon><FileText class="h-5 w-5" /></template>
+          </EmptyState>
+          <ul v-else class="divide-y">
+            <li v-for="report in reports.items.slice(0, 20)" :key="report.id">
+              <button
+                type="button"
+                class="w-full py-2.5 text-left transition-colors hover:text-primary"
+                @click="selectReport(report)"
+              >
+                <p class="text-sm font-medium">{{ formatDate(report.reportDate) }}</p>
+                <p class="text-xs text-muted-foreground">Updated {{ formatRelative(report.updatedAt) }}</p>
+              </button>
+            </li>
+          </ul>
+        </CardContent>
+      </Card>
+    </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Plan progress</CardTitle>
-            <CardDescription>Completion tracked from linked tasks</CardDescription>
-          </CardHeader>
-          <CardContent class="space-y-3">
-            <p v-if="!store.planProgressList.length" class="text-sm text-muted-foreground">No plans yet.</p>
-            <div
-              v-for="row in store.planProgressList"
-              :key="row.plan.id"
-              class="space-y-1.5 rounded-lg border p-2.5"
-            >
-              <div class="flex flex-wrap items-center justify-between gap-2 text-sm">
-                <span class="flex items-center gap-2">
-                  {{ row.plan.title }}
-                  <Badge :variant="planPeriodMeta[row.plan.period]?.variant || 'muted'">
-                    {{ planPeriodMeta[row.plan.period]?.label || row.plan.period }}
-                  </Badge>
-                  <PlanStatusBadge :status="derivedPlanStatus(row.plan, row.progress)" />
-                </span>
-                <span class="text-muted-foreground">{{ row.progress.completed }}/{{ row.progress.total }}</span>
-              </div>
-              <PlanProgressBar
-                :progress="row.progress"
-                :plan="row.plan"
-                :accent="planPeriodMeta[row.plan.period]?.accent || 'var(--color-primary)'"
-              />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </template>
+    <p v-if="isEmptyReport" class="text-xs text-muted-foreground">
+      This report is empty. Fill in a section or use “Suggest from tasks”.
+    </p>
   </div>
 </template>

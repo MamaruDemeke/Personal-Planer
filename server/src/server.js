@@ -4,7 +4,7 @@ import { env } from './config/env.js'
 const app = createApp()
 
 const server = app.listen(env.port, () => {
-  console.log(`Planora API listening on http://localhost:${env.port} (${env.nodeEnv})`)
+  console.log(`Worker Planner API listening on http://localhost:${env.port} (${env.nodeEnv})`)
 })
 
 function shutdown(signal) {

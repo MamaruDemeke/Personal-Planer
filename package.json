@@ -1,8 +1,8 @@
 {
-  "name": "planora",
+  "name": "worker-planner",
   "version": "0.1.0",
   "private": true,
-  "description": "Planora - a professional personal planner web application (Vue 3 + Express + Supabase).",
+  "description": "Worker Planner - a personal task planner and daily work reporter (Vue 3 + Express + Supabase).",
   "type": "module",
   "scripts": {
     "dev": "concurrently -n client,server -c cyan,magenta \"npm:dev:client\" \"npm:dev:server\"",

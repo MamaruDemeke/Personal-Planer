@@ -11,6 +11,9 @@ import { supabase, supabaseConfigured, getUserClient } from '../config/supabase.
  */
 export async function requireAuth(req, _res, next) {
   try {
+    // Already authenticated by an upstream middleware in this request chain.
+    if (req.user && req.supabase) return next()
+
     if (!supabaseConfigured) {
       throw new ApiError(503, 'Authentication is not configured on the server')
     }

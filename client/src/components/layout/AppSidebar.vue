@@ -1,88 +1,78 @@
 <script setup>
 import { computed } from 'vue'
-import { RouterLink, useRoute } from 'vue-router'
-import { PanelLeftClose, PanelLeftOpen, Sparkles } from 'lucide-vue-next'
-import { navigation } from '@/lib/navigation'
+import { X, HardHat } from 'lucide-vue-next'
+import { buildNavSections } from '@/lib/navigation'
+import { useAccessStore } from '@/stores/access'
 import { cn } from '@/lib/utils'
 
-const props = defineProps({
-  collapsed: { type: Boolean, default: false },
-  showCollapseToggle: { type: Boolean, default: true },
+defineProps({
+  open: { type: Boolean, default: false },
 })
+const emit = defineEmits(['close'])
 
-const emit = defineEmits(['toggle-collapse', 'navigate'])
-
-const route = useRoute()
-const isActive = (to) => route.path === to || route.path.startsWith(`${to}/`)
-const labelClass = computed(() => (props.collapsed ? 'sr-only' : 'truncate'))
-
-/** Tint the active destination with its own accent color. */
-const itemStyle = (item, active) =>
-  active
-    ? { color: item.accent, backgroundColor: `color-mix(in oklab, ${item.accent} 16%, transparent)` }
-    : {}
+const access = useAccessStore()
+const sections = computed(() => buildNavSections({ isAdmin: access.isAdmin }))
 </script>
 
 <template>
-  <div class="flex h-full flex-col bg-sidebar text-sidebar-foreground">
+  <!-- Mobile backdrop -->
+  <Transition
+    enter-active-class="transition-opacity duration-200"
+    enter-from-class="opacity-0"
+    leave-active-class="transition-opacity duration-200"
+    leave-to-class="opacity-0"
+  >
     <div
-      class="flex h-16 items-center gap-2.5 border-b border-sidebar-border px-3"
-      :class="collapsed ? 'justify-center px-2' : ''"
-    >
-      <div
-        class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-info text-primary-foreground shadow-sm shadow-primary/30"
-      >
-        <Sparkles class="h-5 w-5" />
-      </div>
-      <div v-if="!collapsed" class="min-w-0">
-        <p class="text-gradient truncate text-sm font-bold tracking-tight">Planora</p>
-        <p class="truncate text-xs text-muted-foreground">Personal planner</p>
-      </div>
-    </div>
+      v-if="open"
+      class="fixed inset-0 z-40 bg-black/50 lg:hidden"
+      aria-hidden="true"
+      @click="emit('close')"
+    />
+  </Transition>
 
-    <nav class="flex-1 space-y-0.5 overflow-y-auto px-2 py-2 scrollbar-thin">
-      <RouterLink
-        v-for="item in navigation"
-        :key="item.to"
-        :to="item.to"
-        :title="collapsed ? item.name : undefined"
-        :style="itemStyle(item, isActive(item.to))"
-        :class="
-          cn(
-            'group relative flex items-center gap-3 overflow-hidden rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-            collapsed ? 'justify-center px-2' : '',
-            isActive(item.to)
-              ? 'font-semibold'
-              : 'text-sidebar-foreground/75 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
-          )
-        "
-        @click="emit('navigate')"
+  <aside
+    :class="
+      cn(
+        'fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r bg-card transition-transform duration-200 lg:translate-x-0',
+        open ? 'translate-x-0' : '-translate-x-full',
+      )
+    "
+    aria-label="Primary"
+  >
+    <div class="flex h-14 items-center gap-2.5 border-b px-4 sm:h-16">
+      <span
+        class="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-info text-primary-foreground shadow-sm shadow-primary/30"
       >
-        <span
-          v-if="isActive(item.to) && !collapsed"
-          class="absolute inset-y-1.5 left-0 w-1 rounded-full"
-          :style="{ backgroundColor: item.accent }"
-        />
-        <component
-          :is="item.icon"
-          class="h-[18px] w-[18px] shrink-0 transition-transform group-hover:scale-110"
-        />
-        <span :class="labelClass">{{ item.name }}</span>
-      </RouterLink>
-    </nav>
-
-    <div v-if="showCollapseToggle" class="border-t border-sidebar-border p-2">
+        <HardHat class="h-5 w-5" />
+      </span>
+      <span class="text-gradient text-lg font-bold tracking-tight">Worker Planner</span>
       <button
         type="button"
-        class="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-        :class="collapsed ? 'justify-center px-2' : ''"
-        :aria-label="collapsed ? 'Expand sidebar' : 'Collapse sidebar'"
-        @click="emit('toggle-collapse')"
+        class="ml-auto rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent lg:hidden"
+        aria-label="Close menu"
+        @click="emit('close')"
       >
-        <PanelLeftOpen v-if="collapsed" class="h-[18px] w-[18px]" />
-        <PanelLeftClose v-else class="h-[18px] w-[18px]" />
-        <span :class="labelClass">Collapse</span>
+        <X class="h-5 w-5" />
       </button>
     </div>
-  </div>
+
+    <nav class="flex-1 space-y-5 overflow-y-auto px-3 py-4">
+      <div v-for="section in sections" :key="section.title" class="space-y-1">
+        <p class="px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          {{ section.title }}
+        </p>
+        <RouterLink
+          v-for="item in section.items"
+          :key="item.label"
+          :to="item.to"
+          class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          active-class="bg-primary/10 text-primary hover:bg-primary/10 hover:text-primary"
+          @click="emit('close')"
+        >
+          <component :is="item.icon" class="h-4 w-4 shrink-0" />
+          {{ item.label }}
+        </RouterLink>
+      </div>
+    </nav>
+  </aside>
 </template>

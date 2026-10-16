@@ -2,8 +2,15 @@ import { createRouter, createWebHistory } from 'vue-router'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import { isSupabaseConfigured } from '@/lib/supabase'
 import { useAuthStore } from '@/stores/auth'
+import { useAccessStore } from '@/stores/access'
 
 const routes = [
+  {
+    path: '/access',
+    name: 'access',
+    component: () => import('@/views/AccessView.vue'),
+    meta: { title: 'Verify access', requiresAuth: true, allowLocked: true },
+  },
   {
     path: '/login',
     name: 'login',
@@ -33,9 +40,8 @@ const routes = [
     component: AppLayout,
     meta: { requiresAuth: true },
     children: [
-      { path: '', redirect: '/dashboard' },
       {
-        path: 'dashboard',
+        path: '',
         name: 'dashboard',
         component: () => import('@/views/DashboardView.vue'),
         meta: { title: 'Dashboard', requiresAuth: true },
@@ -47,52 +53,40 @@ const routes = [
         meta: { title: 'My Tasks', requiresAuth: true },
       },
       {
-        path: 'plans',
-        name: 'plans',
-        component: () => import('@/views/PlansView.vue'),
-        meta: { title: 'Plans', requiresAuth: true },
+        path: 'plan/daily',
+        name: 'plan-daily',
+        component: () => import('@/views/PlanView.vue'),
+        meta: { title: 'Daily Plan', period: 'daily', requiresAuth: true },
       },
       {
-        path: 'calendar',
-        name: 'calendar',
-        component: () => import('@/views/CalendarView.vue'),
-        meta: { title: 'Calendar', requiresAuth: true },
+        path: 'plan/weekly',
+        name: 'plan-weekly',
+        component: () => import('@/views/PlanView.vue'),
+        meta: { title: 'Weekly Plan', period: 'weekly', requiresAuth: true },
       },
       {
-        path: 'projects',
-        name: 'projects',
-        component: () => import('@/views/ProjectsView.vue'),
-        meta: { title: 'Projects', requiresAuth: true },
+        path: 'plan/monthly',
+        name: 'plan-monthly',
+        component: () => import('@/views/PlanView.vue'),
+        meta: { title: 'Monthly Plan', period: 'monthly', requiresAuth: true },
       },
       {
-        path: 'goals',
-        name: 'goals',
-        component: () => import('@/views/GoalsView.vue'),
-        meta: { title: 'Goals', requiresAuth: true },
-      },
-      {
-        path: 'categories',
-        name: 'categories',
-        component: () => import('@/views/CategoriesView.vue'),
-        meta: { title: 'Categories', requiresAuth: true },
-      },
-      {
-        path: 'notes',
-        name: 'notes',
-        component: () => import('@/views/NotesView.vue'),
-        meta: { title: 'Notes', requiresAuth: true },
-      },
-      {
-        path: 'reminders',
-        name: 'reminders',
-        component: () => import('@/views/RemindersView.vue'),
-        meta: { title: 'Reminders', requiresAuth: true },
+        path: 'plan/yearly',
+        name: 'plan-yearly',
+        component: () => import('@/views/PlanView.vue'),
+        meta: { title: 'Yearly Plan', period: 'yearly', requiresAuth: true },
       },
       {
         path: 'reports',
         name: 'reports',
         component: () => import('@/views/ReportsView.vue'),
-        meta: { title: 'Reports', requiresAuth: true },
+        meta: { title: 'Daily Reports', requiresAuth: true },
+      },
+      {
+        path: 'progress',
+        name: 'progress',
+        component: () => import('@/views/ProgressView.vue'),
+        meta: { title: 'Progress & Reports', requiresAuth: true },
       },
       {
         path: 'settings',
@@ -100,9 +94,15 @@ const routes = [
         component: () => import('@/views/SettingsView.vue'),
         meta: { title: 'Settings', requiresAuth: true },
       },
+      {
+        path: 'admin',
+        name: 'admin',
+        component: () => import('@/views/AdminView.vue'),
+        meta: { title: 'Admin', requiresAuth: true, requiresAdmin: true },
+      },
     ],
   },
-  { path: '/:pathMatch(.*)*', redirect: '/dashboard' },
+  { path: '/:pathMatch(.*)*', redirect: '/' },
 ]
 
 const router = createRouter({
@@ -113,7 +113,7 @@ const router = createRouter({
   },
 })
 
-router.beforeEach((to) => {
+router.beforeEach(async (to) => {
   // Without Supabase configured there is no auth to enforce.
   if (!isSupabaseConfigured) return true
 
@@ -124,12 +124,26 @@ router.beforeEach((to) => {
   if (to.meta.requiresAuth && !auth.isAuthenticated) {
     return { name: 'login', query: { redirect: to.fullPath } }
   }
+  if (!auth.isAuthenticated) return true
+
+  // Resolve the account's role + payment/access state once per session.
+  const access = useAccessStore()
+  if (!access.loaded) await access.load()
+
+  if (to.meta.allowLocked) return true
+
+  if (!access.canUse) {
+    return { name: 'access', query: { redirect: to.fullPath } }
+  }
+  if (to.meta.requiresAdmin && !access.isAdmin) {
+    return { name: 'dashboard' }
+  }
   return true
 })
 
 router.afterEach((to) => {
   const title = to.meta?.title
-  document.title = title ? `${title} · Planora` : 'Planora'
+  document.title = title ? `${title} · Worker Planner` : 'Worker Planner'
 })
 
 export default router

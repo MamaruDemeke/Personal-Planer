@@ -1,6 +1,3 @@
-import { createResourceStore } from '@/stores/createResourceStore'
+import { createApiResourceStore } from '@/stores/createApiResourceStore'
 
-export const useTasksStore = createResourceStore('tasks', {
-  table: 'tasks',
-  order: 'created_at',
-})
+export const useTasksStore = createApiResourceStore('tasks', { basePath: '/tasks' })

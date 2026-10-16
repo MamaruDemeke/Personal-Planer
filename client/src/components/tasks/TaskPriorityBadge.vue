@@ -1,19 +1,12 @@
 <script setup>
-import { computed } from 'vue'
 import { Badge } from '@/components/ui/badge'
+import { PRIORITY_BADGE, PRIORITY_LABELS } from '@/lib/constants'
 
-const props = defineProps({ priority: { type: String, required: true } })
-
-const map = {
-  low: { label: 'Low', variant: 'outline' },
-  medium: { label: 'Medium', variant: 'info' },
-  high: { label: 'High', variant: 'warning' },
-  urgent: { label: 'Urgent', variant: 'destructive' },
-}
-
-const config = computed(() => map[props.priority] ?? { label: props.priority, variant: 'outline' })
+defineProps({
+  priority: { type: String, default: 'medium' },
+})
 </script>
 
 <template>
-  <Badge :variant="config.variant">{{ config.label }}</Badge>
+  <Badge :variant="PRIORITY_BADGE[priority]">{{ PRIORITY_LABELS[priority] }}</Badge>
 </template>

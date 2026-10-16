@@ -33,7 +33,7 @@ async function onSubmit() {
   try {
     await auth.updatePassword(form.password)
     toast.success('Password updated', 'You can now sign in with your new password.')
-    router.replace('/dashboard')
+    router.replace('/')
   } catch (err) {
     toast.error('Could not update password', err?.message ?? 'Please try again.')
   } finally {

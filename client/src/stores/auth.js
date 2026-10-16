@@ -1,6 +1,8 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { isSupabaseConfigured, supabase } from '@/lib/supabase'
+import { useAccessStore } from '@/stores/access'
+import { useNotificationsStore } from '@/stores/notifications'
 
 /**
  * Authentication store backed by Supabase Auth.
@@ -8,8 +10,7 @@ import { isSupabaseConfigured, supabase } from '@/lib/supabase'
  * When Supabase is not configured `isConfigured` is false and the store stays
  * in a safe unauthenticated state.
  */
-export const useAuthStore = defineStore('auth', () => {
-  const session = ref(null)
+export const useAuthStore = defineStore('auth', () => {  const session = ref(null)
   const user = ref(null)
   const profile = ref(null)
   const loading = ref(false)
@@ -18,6 +19,12 @@ export const useAuthStore = defineStore('auth', () => {
 
   const isConfigured = isSupabaseConfigured
   const isAuthenticated = computed(() => Boolean(session.value && user.value))
+
+  /** Clear session-scoped stores whenever the signed-in user changes. */
+  function resetSessionStores() {
+    useAccessStore().invalidate()
+    useNotificationsStore().reset()
+  }
   const displayName = computed(
     () => profile.value?.full_name || user.value?.user_metadata?.full_name || user.value?.email || 'Guest',
   )
@@ -39,9 +46,12 @@ export const useAuthStore = defineStore('auth', () => {
       session.value = data.session ?? null
       user.value = data.session?.user ?? null
       if (user.value) await fetchProfile()
+      resetSessionStores()
       supabase.auth.onAuthStateChange(async (_event, nextSession) => {
+        const previousId = user.value?.id ?? null
         session.value = nextSession ?? null
         user.value = nextSession?.user ?? null
+        if (user.value?.id !== previousId) resetSessionStores()
         if (user.value) {
           await fetchProfile()
         } else {
@@ -64,6 +74,7 @@ export const useAuthStore = defineStore('auth', () => {
       if (err) throw err
       session.value = data.session
       user.value = data.user
+      resetSessionStores()
       await fetchProfile()
       return data
     } catch (err) {
@@ -84,12 +95,13 @@ export const useAuthStore = defineStore('auth', () => {
         password,
         options: {
           data: { full_name: fullName },
-          emailRedirectTo: `${window.location.origin}/dashboard`,
+          emailRedirectTo: `${window.location.origin}/`,
         },
       })
       if (err) throw err
       session.value = data.session
       user.value = data.user
+      resetSessionStores()
       return data
     } catch (err) {
       error.value = err?.message ?? 'Sign up failed'
@@ -105,6 +117,7 @@ export const useAuthStore = defineStore('auth', () => {
     session.value = null
     user.value = null
     profile.value = null
+    resetSessionStores()
   }
 
   async function sendPasswordReset(email) {

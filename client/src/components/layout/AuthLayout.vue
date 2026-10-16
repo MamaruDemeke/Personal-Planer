@@ -1,5 +1,5 @@
 <script setup>
-import { Sparkles } from 'lucide-vue-next'
+import { HardHat } from 'lucide-vue-next'
 import { RouterLink } from 'vue-router'
 
 defineProps({
@@ -15,9 +15,9 @@ defineProps({
         <span
           class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-info text-primary-foreground shadow-sm shadow-primary/30"
         >
-          <Sparkles class="h-5 w-5" />
+          <HardHat class="h-5 w-5" />
         </span>
-        <span class="text-gradient text-xl font-bold tracking-tight">Planora</span>
+        <span class="text-gradient text-xl font-bold tracking-tight">Worker Planner</span>
       </RouterLink>
 
       <div class="rounded-xl border bg-card/80 p-6 text-card-foreground shadow-sm backdrop-blur-sm sm:p-8">

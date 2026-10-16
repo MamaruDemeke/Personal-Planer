@@ -1,23 +1,13 @@
 <script setup>
 import { computed, ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import {
-  Bell,
-  Menu,
-  Moon,
-  Search,
-  Sun,
-  User,
-  Settings,
-  LogOut,
-} from 'lucide-vue-next'
+import { useRouter } from 'vue-router'
+import { LogOut, Menu, Moon, Search, Sun } from 'lucide-vue-next'
 import { useTheme } from '@/composables/useTheme'
-import { useUiStore } from '@/stores/ui'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/composables/useToast'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
+import NotificationBell from './NotificationBell.vue'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
   DropdownMenu,
@@ -28,24 +18,23 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu'
 
-const route = useRoute()
+const emit = defineEmits(['toggle-sidebar'])
+
 const router = useRouter()
-const ui = useUiStore()
 const auth = useAuthStore()
 const toast = useToast()
 const { isDark, toggleTheme } = useTheme()
 
 const search = ref('')
 
-const pageTitle = computed(() => route.meta?.title ?? 'Dashboard')
-
-const notifications = ref([
-  { id: 1, title: 'Welcome to Planora', body: 'Create your first task to get started.', time: 'now' },
-])
-
 const profileName = computed(() => auth.displayName)
 const profileEmail = computed(() => auth.user?.email ?? 'Not signed in')
 const initials = computed(() => auth.initials)
+
+function onSearch() {
+  const term = search.value.trim()
+  router.push({ name: 'tasks', query: term ? { search: term } : {} })
+}
 
 async function onSignOut() {
   await auth.signOut()
@@ -56,36 +45,31 @@ async function onSignOut() {
 
 <template>
   <header
-    class="sticky top-0 z-30 flex h-14 items-center gap-2 border-b bg-background/80 px-3 backdrop-blur-md sm:h-16 sm:px-5 lg:px-7"
+    class="sticky top-0 z-30 flex h-14 items-center gap-2 border-b bg-background/80 px-3 backdrop-blur-md sm:h-16 sm:px-5 lg:px-8"
   >
-    <span
-      class="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent"
-      aria-hidden="true"
-    />
-    <Button
-      variant="ghost"
-      size="icon"
-      class="lg:hidden"
-      aria-label="Open navigation"
-      @click="ui.toggleMobileNav()"
+    <button
+      type="button"
+      class="rounded-md p-2 text-muted-foreground transition-colors hover:bg-accent lg:hidden"
+      aria-label="Open menu"
+      @click="emit('toggle-sidebar')"
     >
       <Menu class="h-5 w-5" />
-    </Button>
+    </button>
 
-    <h2 class="truncate text-base font-semibold sm:text-lg lg:hidden">{{ pageTitle }}</h2>
-
-    <div class="relative ml-auto hidden w-full max-w-sm items-center md:flex lg:ml-0">
-      <Search class="pointer-events-none absolute left-3 h-4 w-4 text-muted-foreground" />
+    <form class="relative w-full max-w-sm" role="search" @submit.prevent="onSearch">
+      <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
       <Input
         v-model="search"
         type="search"
-        placeholder="Search tasks, projects, notes…"
+        placeholder="Search tasks..."
         class="pl-9"
-        aria-label="Search"
+        aria-label="Search tasks"
       />
-    </div>
+    </form>
 
     <div class="ml-auto flex items-center gap-1">
+      <NotificationBell v-if="auth.isAuthenticated" />
+
       <Button
         variant="ghost"
         size="icon"
@@ -95,36 +79,6 @@ async function onSignOut() {
         <Sun v-if="isDark" class="h-5 w-5" />
         <Moon v-else class="h-5 w-5" />
       </Button>
-
-      <DropdownMenu>
-        <DropdownMenuTrigger as-child>
-          <Button variant="ghost" size="icon" class="relative" aria-label="Notifications">
-            <Bell class="h-5 w-5" />
-            <span
-              v-if="notifications.length"
-              class="absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground"
-            >
-              {{ notifications.length }}
-            </span>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent class="w-80">
-          <DropdownMenuLabel>Notifications</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            v-for="n in notifications"
-            :key="n.id"
-            class="flex flex-col items-start gap-0.5"
-          >
-            <span class="text-sm font-medium">{{ n.title }}</span>
-            <span class="text-xs text-muted-foreground">{{ n.body }}</span>
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem class="justify-center text-xs text-muted-foreground">
-            You are all caught up
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
 
       <DropdownMenu>
         <DropdownMenuTrigger as-child>
@@ -146,17 +100,11 @@ async function onSignOut() {
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem>
-            <User class="h-4 w-4" />
-            Profile
-          </DropdownMenuItem>
           <DropdownMenuItem as-child>
-            <RouterLink to="/settings" class="flex w-full items-center gap-2">
-              <Settings class="h-4 w-4" />
+            <RouterLink :to="{ name: 'settings' }" class="flex w-full items-center gap-2">
               Settings
             </RouterLink>
           </DropdownMenuItem>
-          <DropdownMenuSeparator v-if="auth.isAuthenticated" />
           <DropdownMenuItem
             v-if="auth.isAuthenticated"
             class="text-destructive focus:text-destructive"

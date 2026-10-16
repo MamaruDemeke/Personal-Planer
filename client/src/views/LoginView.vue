@@ -35,7 +35,7 @@ async function onSubmit() {
   try {
     await auth.signIn(form.email.trim(), form.password)
     toast.success('Welcome back', 'You are signed in.')
-    const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/dashboard'
+    const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/'
     router.replace(redirect)
   } catch (err) {
     toast.error('Sign in failed', err?.message ?? 'Please try again.')
@@ -46,7 +46,7 @@ async function onSubmit() {
 </script>
 
 <template>
-  <AuthLayout title="Welcome back" subtitle="Sign in to your Planora account">
+  <AuthLayout title="Welcome back" subtitle="Sign in to your Worker Planner account">
     <div
       v-if="!auth.isConfigured"
       class="mb-5 flex gap-3 rounded-lg border border-warning/40 bg-warning/10 p-3 text-sm"
@@ -121,7 +121,7 @@ async function onSubmit() {
 
     <template #footer>
       <RouterLink
-        to="/dashboard"
+        to="/"
         class="block text-center text-xs text-muted-foreground hover:text-foreground"
       >
         Continue without signing in

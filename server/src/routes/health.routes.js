@@ -12,7 +12,7 @@ router.get('/', (_req, res) => {
   res.json({
     data: {
       status: 'ok',
-      service: 'planora-api',
+      service: 'worker-planner-api',
       uptime: process.uptime(),
       timestamp: new Date().toISOString(),
     },

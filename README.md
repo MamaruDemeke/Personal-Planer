@@ -1,52 +1,69 @@
-# Planora
+# Worker Planner
 
-**Planora** is a professional, responsive personal planner web application. It helps users manage
-daily tasks, weekly schedules, personal goals, projects, notes, reminders, time-bound plans, and
-productivity reports.
+**Worker Planner** is a personal task planner for organising work, tracking progress and reporting
+on it. Register an account, plan tasks across **daily / weekly / monthly / yearly** views, watch your
+**completion stats**, get **reminders** for due work, and write **daily work reports**.
 
-Built with **Vue 3** (Composition API + `<script setup>`), **Express.js**, and **Supabase**
-(PostgreSQL + Auth + Row Level Security).
+Built with **Vue 3** (Composition API + `<script setup>`), **Vite**, **Pinia** and **Tailwind CSS**
+on the front end; an **Express REST API** in the middle; and **Supabase** (PostgreSQL + Auth + Row
+Level Security) as the data layer.
+
+> Every request goes **browser → Express API → Supabase**. The API verifies the Supabase access
+> token and runs each query as that user, so Row Level Security enforces per-user isolation.
 
 ---
+
+## Features
+
+- **Accounts** — register, log in, forgot / reset password (Supabase Auth), guarded routes.
+- **Dashboard** — totals, completed / in-progress / overdue counts, overall completion %, a status
+  doughnut, a priority bar chart, and upcoming & overdue lists.
+- **Tasks CRUD** — title, description, notes, category, priority (low/medium/high), status,
+  start date, deadline and progress. Search, filter (status, priority, category) and sort.
+- **Progress** — 0–100% per task with an inline slider; marking complete records the completion
+  date and whether it was on time.
+- **Planning** — daily, weekly, monthly and yearly views with a calendar grid and a list. Click any
+  day or month to drill in.
+- **Daily work reports** — completed, ongoing, pending, blockers, achievements and tomorrow's plan.
+  "Suggest from tasks" fills the first three from your data; export as Markdown or print.
+- **Reminders** — browser notifications plus in-app alerts for overdue tasks and tasks due within
+  24 hours (deduplicated per task per day).
+- **Settings** — profile (name, timezone), theme (light/dark), notification toggle, category
+  management and sign out.
 
 ## Tech stack
 
 | Layer      | Technology |
 |------------|------------|
-| Frontend   | Vue 3, Vite, Vue Router, Pinia, Tailwind CSS, Lucide icons, shadcn-vue-style components |
-| Backend    | Node.js, Express.js (REST API) |
-| Database   | Supabase PostgreSQL, Row Level Security, Supabase Storage |
+| Frontend   | Vue 3, Vite, Vue Router, Pinia, Tailwind CSS, reka-ui, Chart.js, Lucide icons |
+| Backend    | Node.js, Express.js (REST API), Zod validation |
+| Database   | Supabase PostgreSQL, Row Level Security |
 | Testing    | Vitest (unit), Playwright (e2e) |
-| Deployment | Vercel (client), Node host (server), Supabase (db/auth) |
+| Deployment | Vercel (client + API), Supabase (db/auth) |
 
 ## Repository layout
 
 ```
-planora/
+personal-planer/
 ├─ client/                 # Vue 3 + Vite frontend
 │  └─ src/
 │     ├─ assets/           # Tailwind entry + design tokens
-│     ├─ components/       # layout/, ui/, tasks/, projects/, goals/, forms/
-│     ├─ views/            # route pages
+│     ├─ components/       # layout/, ui/, forms/, common/, dashboard/, tasks/, plan/
+│     ├─ views/            # Dashboard, Tasks, Plan, Reports, Settings + auth pages
 │     ├─ router/           # vue-router
-│     ├─ stores/           # Pinia stores
-│     ├─ services/         # API clients
-│     ├─ composables/      # reusable composition functions
-│     ├─ schemas/          # validation schemas
-│     ├─ lib/              # cn() and helpers
-│     ├─ App.vue
-│     └─ main.js
+│     ├─ stores/           # Pinia stores (auth, tasks, categories, reports, dashboard)
+│     ├─ services/         # api.js — REST client (Bearer token + unwrap)
+│     ├─ composables/      # useTheme, useToast, useReminders
+│     ├─ schemas/          # zod validation schemas
+│     └─ lib/              # supabase client + helpers
 ├─ server/                 # Express REST API
 │  └─ src/
-│     ├─ routes/
-│     ├─ controllers/
-│     ├─ services/
-│     ├─ middleware/
-│     ├─ validators/
-│     ├─ config/
-│     ├─ utils/
-│     ├─ app.js
-│     └─ server.js
+│     ├─ controllers/      # task, category, report, dashboard, auth
+│     ├─ routes/           # mounted under /api
+│     ├─ validators/       # zod request schemas
+│     ├─ middleware/       # auth (JWT), validate, error handling, rate limit
+│     ├─ config/           # env + Supabase clients
+│     └─ utils/            # ApiError, asyncHandler, case, db
 └─ supabase/
    └─ migrations/          # version-controlled SQL migrations
 ```
@@ -55,7 +72,7 @@ planora/
 
 - Node.js 20+ (developed on Node 24)
 - npm 10+
-- A Supabase project (required). All data and auth are backed by Supabase.
+- A Supabase project (required).
 
 ## Setup
 
@@ -63,7 +80,7 @@ planora/
 # 1. Install everything
 npm run install:all
 
-# 2. Create local env files from the examples (already created with placeholders)
+# 2. Create local env files from the examples
 copy client\.env.example client\.env
 copy server\.env.example server\.env
 
@@ -71,95 +88,72 @@ copy server\.env.example server\.env
 npm run dev
 ```
 
-Or run them separately:
+If port 4000 or 5173 is already in use, a stale dev stack is still running. Stop it and re-run
+`npm run dev` once.
 
-```bash
-npm run dev:client
-npm run dev:server
-```
+## Connect Supabase
 
-## Connecting Supabase (Phase 3)
+1. **Create the database schema.** In your Supabase project open the **SQL Editor** and run, in
+   order:
+   - `supabase/migrations/0001_init_schema.sql` — tables (`profiles`, `categories`, `tasks`,
+     `reports`), enums, and triggers
+   - `supabase/migrations/0002_row_level_security.sql` — owner-only RLS policies
 
-1. **Create the database schema.** In your Supabase project open the **SQL Editor** and run,
-   in order, the contents of:
-   - `supabase/migrations/0001_init_schema.sql`
-   - `supabase/migrations/0002_row_level_security.sql`
-   - `supabase/migrations/0003_plans.sql`
-
-   (Or, with the Supabase CLI linked to your project: `supabase db push`.)
+   > `0001` begins by dropping the app tables so it can be re-run. On an existing project this
+   > **resets their data** — intended for the fresh Worker Planner schema.
 
 2. **Add your API credentials.** Dashboard → **Project Settings → API**, then edit:
-   - `client/.env` → `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` (anon/publishable key)
-   - `server/.env` → `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`
-   - Optionally `SUPABASE_SERVICE_ROLE_KEY` in `server/.env` (server-only; never in the client).
+   - `client/.env` → `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `VITE_API_BASE_URL`
+   - `server/.env` → `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` (and `CORS_ORIGINS`)
 
-3. **Configure auth redirect URLs.** Dashboard → **Authentication → URL Configuration** and add:
-   - Site URL: `http://localhost:5173`
-   - Redirect URLs: `http://localhost:5173/**`
-   (Add your production URLs the same way when you deploy.)
+3. **Configure auth redirect URLs.** Dashboard → **Authentication → URL Configuration**:
+   - Site URL: `http://localhost:5173` (and your production URL)
+   - Redirect URLs: `http://localhost:5173/**` (and `https://<your-domain>/**`)
 
-4. **Restart the dev servers** (`npm run dev`). Visit `/register` to create the first account.
+4. **Restart the dev servers** and visit `/register` to create the first account.
 
-### Verify
+## API overview
 
-- `GET http://localhost:4000/api/health` → `{ "data": { "status": "ok", ... } }`
-- `GET http://localhost:4000/api/auth/me` with header `Authorization: Bearer <access_token>`
-  → returns the signed-in user. Without a token it returns `401`.
+All routes are mounted under `/api` and (except health) require
+`Authorization: Bearer <supabase-access-token>`.
 
-> Auth is done with the Supabase JS SDK in the browser; the Express API re-verifies the
-> access token (`server/src/middleware/auth.js`) and uses RLS for all data access.
+| Method | Path | Purpose |
+|--------|------|---------|
+| GET    | `/health` | Liveness probe |
+| GET    | `/auth/me` | Current user echo |
+| GET    | `/tasks` | List tasks (`search`, `status`, `priority`, `categoryId`, `from`, `to`, `sort`, `order`) |
+| POST   | `/tasks` | Create a task |
+| GET/PATCH/DELETE | `/tasks/:id` | Read / update / delete a task |
+| GET/POST | `/categories` | List / create categories |
+| PATCH/DELETE | `/categories/:id` | Update / delete a category |
+| GET    | `/reports` | List reports (`from`, `to`) |
+| GET    | `/reports/date/:date` | Report for a specific day (`YYYY-MM-DD`) |
+| GET    | `/reports/suggest?date=` | Suggest report content from tasks |
+| POST/GET/PATCH/DELETE | `/reports` & `/reports/:id` | Upsert / read / update / delete a report |
+| GET    | `/dashboard/summary` | Aggregated stats, upcoming and overdue tasks |
 
-## Plans module
+## How tasks work
 
-Plans are time-bound commitments (daily / weekly / monthly / yearly) with live progress tracking.
+- **Dates** are `tasks.start_date` and `tasks.deadline` (`timestamptz`, sent as ISO strings). A
+  database check plus the server and form schemas enforce `deadline >= start_date`.
+- **Status** is one of `not_started | in_progress | completed`. **Overdue** is *derived* on the
+  server (not stored): a task is overdue when it is not completed and its deadline is in the past.
+- **Completion** — a database trigger keeps things consistent: `progress = 100` sets the status to
+  `completed` and stamps `completed_at`; it also records `completed_late` (whether it finished after
+  the deadline). Un-completing clears those fields.
+- **Reminders** are handled by `useReminders` (`client/src/composables/useReminders.js`): it polls
+  the dashboard summary every 5 minutes and raises a browser notification + toast for overdue and
+  due-soon tasks, once per task per day.
 
-- **Schema** — `supabase/migrations/0003_plans.sql` adds the `plan_period` / `plan_status` enums,
-  the `plans` table, a nullable `tasks.plan_id` (with `ON DELETE SET NULL`), RLS owner policies, an
-  extended `assert_task_refs_owner()` guard (a task may only reference a plan you own), and a
-  `sync_plan_completion()` trigger that snapshots `final_progress` and stamps `completed_at` when a
-  plan is marked complete (and clears them when it is reopened).
-- **Progress is derived, never stored** while a plan is in flight: the percentage is computed from
-  the completion of the tasks linked to it (`client/src/lib/planProgress.js`). A completed plan
-  instead shows its snapshot, so history stays stable even if tasks change later.
-- **UI** — a dedicated `/plans` page (`client/src/views/PlansView.vue`) with search, period/status
-  filters (including a derived **Overdue** state), sorting, period-colored progress bars, linked-task
-  checklists, and a completion dialog that captures **actual results** next to the plan's expected
-  results. Tasks can be linked to a plan from `TasksView`, and plan metrics appear on the dashboard
-  and reports.
-- **Graceful degradation** — if migration `0003` has not been applied yet, the rest of the app keeps
-  working: the plans store error is contained, the task→plan field is hidden, and the Plans page
-  shows a one-line reminder to run the migration.
+## Scripts
 
-
-## Current status
-
-- **Phase 1 (setup + design system)** — complete. Vue 3 + Vite + Tailwind v4 tokens (light/dark),
-  shadcn-vue-style `ui/` primitives (`Button`, `Card`, `Badge`, `Input`, `Label`, `Progress`,
-  `DropdownMenu`, `Avatar`, `Dialog`, `Select`, …), `cn()` utility, Lucide icons, `vue-sonner` toasts.
-- **Phase 2 (layout + dashboard)** — complete. Collapsible desktop sidebar, responsive mobile
-  drawer, top header (search / theme toggle / notifications / profile), and a real dashboard whose
-  every statistic is **derived from records** (no hardcoded numbers), with a Chart.js activity chart,
-  upcoming deadlines, today's schedule, goal progress, and recent activity.
-- **Phase 3 (Supabase schema + auth)** — code complete, **not yet verified against your cloud
-  project**. Includes full SQL schema (`0001_init_schema.sql`), RLS policies
-  (`0002_row_level_security.sql`), the browser Supabase client, a Pinia auth store, guarded routes
-  with Login / Register / Forgot-password / Reset-password views, and a server `requireAuth`
-   middleware with `GET /api/auth/me`. Every module performs CRUD directly against Supabase with
-   RLS enforced; there is no demo/seed data.
-- **Plans module** — complete (see [Plans module](#plans-module)). Requires migration
-  `supabase/migrations/0003_plans.sql` to be applied in your Supabase project.
-- **UI polish** — colorful design tokens, gradient accents, denser responsive layouts across every view.
-
-## Phase roadmap
-
-- [x] **Phase 1** — Project setup and design system
-- [x] Phase 2 — Responsive layout, sidebar, header, dashboard UI
-- [x] Phase 3 — Supabase schema, migrations, RLS, authentication (code complete; run migrations + add keys)
-- [ ] Phase 4 — Task CRUD with search, filters, validation
-- [ ] Phase 5 — Categories, projects, goals, notes, events CRUD
-- [ ] Phase 6 — Calendar, reminders, reports, charts, **plans with progress tracking**
-- [ ] Phase 7 — Testing, security review, bug fixing
-- [ ] Phase 8 — GitHub integration and production deployment
+| Command | Description |
+|---------|-------------|
+| `npm run install:all` | Install root + client + server dependencies |
+| `npm run dev` | Run the client and server together |
+| `npm run dev:client` / `dev:server` | Run one side only |
+| `npm run build:client` | Production build of the client |
+| `npm run test` | Run the client unit tests |
 
 ## Environment variables
 

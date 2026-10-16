@@ -40,8 +40,8 @@ async function onSubmit() {
   try {
     const data = await auth.signUp(form.email.trim(), form.password, form.fullName.trim())
     if (data?.session) {
-      toast.success('Account created', 'Welcome to Planora!')
-      router.replace('/dashboard')
+      toast.success('Account created', 'Welcome to Worker Planner!')
+      router.replace('/')
     } else {
       needsConfirmation.value = true
       toast.info('Confirm your email', 'Check your inbox to finish signing up.')
@@ -55,7 +55,7 @@ async function onSubmit() {
 </script>
 
 <template>
-  <AuthLayout title="Create your account" subtitle="Start organizing your day with Planora">
+  <AuthLayout title="Create your account" subtitle="Start organizing your work with Worker Planner">
     <div
       v-if="needsConfirmation"
       class="flex gap-3 rounded-lg border border-success/40 bg-success/10 p-4 text-sm"
