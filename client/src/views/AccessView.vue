@@ -2,12 +2,15 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
+  ArrowLeft,
   BadgeCheck,
   Clock,
   HardHat,
   Image as ImageIcon,
   Loader2,
   LogOut,
+  Mail,
+  Phone,
   Receipt,
   ShieldAlert,
   Upload,
@@ -31,7 +34,8 @@ const route = useRoute()
 const router = useRouter()
 const toast = useToast()
 
-const MAX_IMAGE_BYTES = 1.5 * 1024 * 1024
+const MAX_IMAGE_BYTES = 1.4 * 1024 * 1024
+const MAX_PROOF_CHARS = 2_000_000
 
 const loading = ref(true)
 const loadError = ref(null)
@@ -97,12 +101,19 @@ function onFile(event) {
     return
   }
   if (file.size > MAX_IMAGE_BYTES) {
-    formError.value = 'That image is larger than 1.5 MB. Please choose a smaller one.'
+    formError.value = 'That image is larger than 1.4 MB. Please choose a smaller one.'
     return
   }
   const reader = new FileReader()
   reader.onload = () => {
-    proofImage.value = typeof reader.result === 'string' ? reader.result : ''
+    const result = typeof reader.result === 'string' ? reader.result : ''
+    if (result.length > MAX_PROOF_CHARS) {
+      formError.value = 'That image is too large once encoded. Please choose a smaller one.'
+      proofImage.value = ''
+      fileName.value = ''
+      return
+    }
+    proofImage.value = result
     fileName.value = file.name
   }
   reader.onerror = () => {
@@ -134,6 +145,7 @@ async function submit() {
     toast.success('Payment submitted', 'An administrator will verify it shortly.')
   } catch (err) {
     formError.value = err?.message ?? 'Could not submit your payment'
+    toast.error('Could not submit your payment', err?.message)
   } finally {
     submitting.value = false
   }
@@ -144,9 +156,15 @@ function continueToApp() {
   router.replace(redirect)
 }
 
+function goBack() {
+  if (window.history.length > 1) router.back()
+  else router.push({ name: 'dashboard' })
+}
+
 async function signOut() {
   access.invalidate()
   await auth.signOut()
+  toast.success('Signed out')
   router.replace({ name: 'login' })
 }
 </script>
@@ -160,7 +178,11 @@ async function signOut() {
         <HardHat class="h-5 w-5" />
       </span>
       <span class="text-gradient text-lg font-bold tracking-tight">Worker Planner</span>
-      <Button variant="ghost" size="sm" class="ml-auto" @click="signOut">
+      <Button variant="ghost" size="sm" class="ml-auto" @click="goBack">
+        <ArrowLeft class="h-4 w-4" />
+        Back to planner
+      </Button>
+      <Button variant="ghost" size="sm" @click="signOut">
         <LogOut class="h-4 w-4" />
         Sign out
       </Button>
@@ -173,7 +195,7 @@ async function signOut() {
       </div>
 
       <ErrorState
-        v-else-if="loadError"
+        v-else-if="loadError && !summary"
         title="Could not load your access"
         :description="loadError"
         @retry="refresh"
@@ -205,6 +227,13 @@ async function signOut() {
         </Card>
 
         <template v-else>
+          <div
+            v-if="loadError"
+            class="mb-4 rounded-lg border border-warning/30 bg-warning/5 p-3 text-sm text-warning-foreground"
+          >
+            {{ loadError }} You can still submit your payment below.
+          </div>
+
           <div class="mb-6 space-y-2 text-center">
             <Badge :variant="statusMeta.variant">{{ statusMeta.label }}</Badge>
             <h1 class="text-2xl font-semibold tracking-tight">Verify your payment</h1>
@@ -247,6 +276,23 @@ async function signOut() {
                   on {{ formatDateTime(summary.paymentSubmittedAt) }}</template
                 >. An administrator will approve it shortly.
               </p>
+              <div class="mt-2 flex flex-col items-center gap-1.5 text-sm">
+                <p class="text-muted-foreground">Need help or want to follow up? Contact us:</p>
+                <a
+                  href="tel:0943467433"
+                  class="inline-flex items-center gap-1.5 font-medium text-primary hover:underline"
+                >
+                  <Phone class="h-4 w-4" />
+                  0943467433
+                </a>
+                <a
+                  href="mailto:mamardemeke1221@gmail.com"
+                  class="inline-flex items-center gap-1.5 font-medium text-primary hover:underline"
+                >
+                  <Mail class="h-4 w-4" />
+                  mamardemeke1221@gmail.com
+                </a>
+              </div>
             </CardContent>
           </Card>
 
@@ -310,7 +356,7 @@ async function signOut() {
                     class="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed px-4 py-6 text-sm text-muted-foreground transition-colors hover:bg-accent"
                   >
                     <Upload class="h-4 w-4" />
-                    {{ fileName || 'Choose an image (max 1.5 MB)' }}
+                    {{ fileName || 'Choose an image (max 1.4 MB)' }}
                     <input
                       type="file"
                       accept="image/png,image/jpeg,image/webp,image/gif"

@@ -99,6 +99,28 @@ export function requireApproved(req, _res, next) {
   )
 }
 
+const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS'])
+
+/**
+ * Read-only gate for locked accounts: every request is allowed, but any
+ * mutating method (POST/PUT/PATCH/DELETE) is rejected until an administrator
+ * approves the account. This lets new users browse the app while preventing
+ * them from creating or changing data.
+ */
+export function requireApprovedToWrite(req, _res, next) {
+  const access = req.access ?? buildAccess(req.profile, req.isAdmin)
+  if (access.canUse || SAFE_METHODS.has(req.method)) return next()
+
+  next(
+    new ApiError(403, LOCK_MESSAGES[access.reason] ?? 'Access is locked', {
+      code: `ACCESS_${String(access.reason ?? 'locked').toUpperCase()}`,
+      reason: access.reason,
+      paymentStatus: access.paymentStatus,
+      approvedUntil: access.approvedUntil,
+    }),
+  )
+}
+
 /** Restricts a route to administrators. */
 export function requireAdmin(req, _res, next) {
   if (req.isAdmin) return next()

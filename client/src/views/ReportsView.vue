@@ -13,10 +13,12 @@ import { Label } from '@/components/ui/label'
 import Textarea from '@/components/ui/Textarea.vue'
 import { useReportsStore } from '@/stores/reports'
 import { useToast } from '@/composables/useToast'
+import { useAccessGate } from '@/composables/useAccessGate'
 import { formatDate, formatRelative } from '@/lib/format'
 
 const reports = useReportsStore()
 const toast = useToast()
+const { ensureWrite } = useAccessGate()
 
 const SECTIONS = [
   { key: 'completed', label: 'Work completed' },
@@ -85,6 +87,7 @@ async function suggest() {
 }
 
 async function save() {
+  if (!ensureWrite()) return
   saving.value = true
   try {
     const row = await reports.save({ ...form })
@@ -98,6 +101,7 @@ async function save() {
 }
 
 async function remove() {
+  if (!ensureWrite()) return
   if (!currentId.value) return
   try {
     await reports.remove(currentId.value)
@@ -127,6 +131,7 @@ function exportMarkdown() {
   a.download = `report-${form.reportDate}.md`
   a.click()
   URL.revokeObjectURL(url)
+  toast.success('Report exported', `Saved as report-${form.reportDate}.md`)
 }
 
 function printReport() {

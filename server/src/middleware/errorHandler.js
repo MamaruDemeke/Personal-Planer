@@ -41,6 +41,9 @@ export function errorHandler(err, _req, res, _next) {
   }
 
   res.status(statusCode).json({
-    error: { message, ...(details ? { details } : {}) },
+    error: {
+      message,
+      ...(details && (statusCode < 500 || !isProduction) ? { details } : {}),
+    },
   })
 }

@@ -27,12 +27,14 @@ import { useCategoriesStore } from '@/stores/categories'
 import { useTheme } from '@/composables/useTheme'
 import { useReminders } from '@/composables/useReminders'
 import { useToast } from '@/composables/useToast'
+import { useAccessGate } from '@/composables/useAccessGate'
 
 const router = useRouter()
 const auth = useAuthStore()
 const categories = useCategoriesStore()
 const reminders = useReminders()
 const toast = useToast()
+const { ensureWrite } = useAccessGate()
 const { isDark, toggleTheme } = useTheme()
 
 const profile = reactive({
@@ -74,19 +76,23 @@ async function enableNotifications() {
 }
 
 function openCreateCategory() {
+  if (!ensureWrite()) return
   editing.value = null
   dialogOpen.value = true
 }
 function openEditCategory(category) {
+  if (!ensureWrite()) return
   editing.value = category
   dialogOpen.value = true
 }
 function askDeleteCategory(category) {
+  if (!ensureWrite()) return
   deleting.value = category
   deleteOpen.value = true
 }
 
 async function submitCategory(values) {
+  if (!ensureWrite()) return
   try {
     if (editing.value) {
       await categories.update(editing.value.id, values)
@@ -114,8 +120,14 @@ async function confirmDeleteCategory() {
   }
 }
 
+function switchTheme() {
+  toggleTheme()
+  toast.success(isDark.value ? 'Dark mode enabled' : 'Light mode enabled')
+}
+
 async function signOut() {
   await auth.signOut()
+  toast.success('Signed out')
   if (auth.isConfigured) router.replace({ name: 'login' })
 }
 </script>
@@ -156,7 +168,7 @@ async function signOut() {
         <CardDescription>Switch between light and dark themes.</CardDescription>
       </CardHeader>
       <CardContent class="pt-0">
-        <Button variant="outline" @click="toggleTheme()">
+        <Button variant="outline" @click="switchTheme">
           <Sun v-if="isDark" class="h-4 w-4" />
           <Moon v-else class="h-4 w-4" />
           {{ isDark ? 'Switch to light' : 'Switch to dark' }}

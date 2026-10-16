@@ -1,4 +1,5 @@
 import {
+  BadgeCheck,
   Calendar,
   CalendarDays,
   CalendarRange,
@@ -14,9 +15,10 @@ import {
 /**
  * Sidebar navigation, grouped into sections. Each item's `to` is a router
  * location and `icon` is a lucide component. The Admin section is only
- * included for administrators.
+ * included for administrators. A `locked` (unpaid/unapproved) account can still
+ * browse every section, so it additionally gets a prominent payment entry.
  */
-export function buildNavSections({ isAdmin = false } = {}) {
+export function buildNavSections({ isAdmin = false, locked = false } = {}) {
   const sections = [
     {
       title: 'Overview',
@@ -43,6 +45,13 @@ export function buildNavSections({ isAdmin = false } = {}) {
       ],
     },
   ]
+
+  if (locked && !isAdmin) {
+    sections.unshift({
+      title: 'Account',
+      items: [{ label: 'Verify payment', to: { name: 'access' }, icon: BadgeCheck }],
+    })
+  }
 
   if (isAdmin) {
     sections.push({

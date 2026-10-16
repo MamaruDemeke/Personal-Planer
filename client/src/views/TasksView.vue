@@ -21,6 +21,7 @@ import { useTasksStore } from '@/stores/tasks'
 import { useCategoriesStore } from '@/stores/categories'
 import { useDashboardStore } from '@/stores/dashboard'
 import { useToast } from '@/composables/useToast'
+import { useAccessGate } from '@/composables/useAccessGate'
 
 const route = useRoute()
 const router = useRouter()
@@ -28,6 +29,7 @@ const tasksStore = useTasksStore()
 const categoriesStore = useCategoriesStore()
 const dashboard = useDashboardStore()
 const toast = useToast()
+const { ensureWrite } = useAccessGate()
 
 const search = ref(typeof route.query.search === 'string' ? route.query.search : '')
 const statusFilter = ref('')
@@ -111,16 +113,19 @@ function resetFilters() {
 }
 
 function openCreate() {
+  if (!ensureWrite()) return
   editing.value = null
   dialogOpen.value = true
 }
 
 function openEdit(task) {
+  if (!ensureWrite()) return
   editing.value = task
   dialogOpen.value = true
 }
 
 function askDelete(task) {
+  if (!ensureWrite()) return
   deleting.value = task
   deleteOpen.value = true
 }
@@ -130,6 +135,7 @@ function toggleOrder() {
 }
 
 async function submit(values) {
+  if (!ensureWrite()) return
   try {
     if (editing.value) {
       await tasksStore.update(editing.value.id, values)
@@ -160,11 +166,13 @@ async function confirmDelete() {
 }
 
 async function setProgress(task, value) {
+  if (!ensureWrite()) return
   const progress = Math.max(0, Math.min(100, Number(value) || 0))
   if (progress === (task.progress ?? 0)) return
   try {
     await tasksStore.update(task.id, { progress })
     dashboard.invalidate()
+    toast.success(progress >= 100 ? 'Task marked complete' : `Progress updated to ${progress}%`)
   } catch (err) {
     toast.error('Could not update progress', err?.message)
   }

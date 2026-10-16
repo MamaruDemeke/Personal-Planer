@@ -11,7 +11,7 @@ import adminRoutes from './admin.routes.js'
 import notificationRoutes from './notification.routes.js'
 
 import { requireAuth } from '../middleware/auth.js'
-import { loadProfile, requireAdmin, requireApproved } from '../middleware/access.js'
+import { loadProfile, requireAdmin, requireApprovedToWrite } from '../middleware/access.js'
 
 const router = Router()
 
@@ -25,11 +25,12 @@ router.use('/notifications', requireAuth, loadProfile, notificationRoutes)
 // Administrator-only.
 router.use('/admin', requireAuth, loadProfile, requireAdmin, adminRoutes)
 
-// The planner itself stays locked until an administrator approves the account.
-router.use('/tasks', requireAuth, loadProfile, requireApproved, taskRoutes)
-router.use('/categories', requireAuth, loadProfile, requireApproved, categoryRoutes)
-router.use('/reports', requireAuth, loadProfile, requireApproved, reportRoutes)
-router.use('/dashboard', requireAuth, loadProfile, requireApproved, dashboardRoutes)
-router.use('/progress', requireAuth, loadProfile, requireApproved, progressRoutes)
+// Browsable by everyone signed in, but locked accounts may only read - writes
+// (create / update / delete) stay blocked until an administrator approves.
+router.use('/tasks', requireAuth, loadProfile, requireApprovedToWrite, taskRoutes)
+router.use('/categories', requireAuth, loadProfile, requireApprovedToWrite, categoryRoutes)
+router.use('/reports', requireAuth, loadProfile, requireApprovedToWrite, reportRoutes)
+router.use('/dashboard', requireAuth, loadProfile, requireApprovedToWrite, dashboardRoutes)
+router.use('/progress', requireAuth, loadProfile, requireApprovedToWrite, progressRoutes)
 
 export default router

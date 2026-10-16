@@ -33,6 +33,7 @@ import { useTasksStore } from '@/stores/tasks'
 import { useCategoriesStore } from '@/stores/categories'
 import { useDashboardStore } from '@/stores/dashboard'
 import { useToast } from '@/composables/useToast'
+import { useAccessGate } from '@/composables/useAccessGate'
 
 const route = useRoute()
 const router = useRouter()
@@ -40,6 +41,7 @@ const tasks = useTasksStore()
 const categories = useCategoriesStore()
 const dashboard = useDashboardStore()
 const toast = useToast()
+const { ensureWrite } = useAccessGate()
 
 const PERIOD_LABELS = { daily: 'Daily', weekly: 'Weekly', monthly: 'Monthly', yearly: 'Yearly' }
 
@@ -173,10 +175,12 @@ function openMonth(date) {
 }
 
 async function toggleComplete(task) {
+  if (!ensureWrite()) return
   const progress = (task.progress ?? 0) >= 100 ? 0 : 100
   try {
     await tasks.update(task.id, { progress })
     dashboard.invalidate()
+    toast.success(progress >= 100 ? 'Task marked complete' : 'Task reopened')
   } catch (err) {
     toast.error('Could not update task', err?.message)
   }

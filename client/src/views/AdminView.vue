@@ -6,11 +6,14 @@ import {
   Clock,
   Image as ImageIcon,
   Loader2,
+  Pencil,
   Receipt,
   RotateCcw,
   ShieldCheck,
   ShieldMinus,
   ShieldPlus,
+  Trash2,
+  UserPlus,
   Users,
 } from 'lucide-vue-next'
 
@@ -51,6 +54,10 @@ const dialog = reactive({
   payment: null,
   note: '',
   accessDays: '',
+  email: '',
+  password: '',
+  fullName: '',
+  role: 'user',
 })
 
 const pendingPayments = computed(() => payments.value.filter((p) => p.status === 'pending'))
@@ -58,7 +65,16 @@ const pendingPayments = computed(() => payments.value.filter((p) => p.status ===
 const dialogTitle = computed(() => {
   if (dialog.mode === 'reject') return 'Reject submission'
   if (dialog.mode === 'grant') return 'Grant access'
+  if (dialog.mode === 'create') return 'Add user'
+  if (dialog.mode === 'edit') return 'Edit user'
+  if (dialog.mode === 'delete') return 'Delete user'
   return 'Approve payment'
+})
+
+const dialogDescription = computed(() => {
+  if (dialog.mode === 'reject') return 'The user will be notified and can submit a new receipt.'
+  if (dialog.mode === 'delete') return 'This action cannot be undone.'
+  return 'Confirm the details below.'
 })
 
 async function load() {
@@ -88,6 +104,10 @@ function openDialog(mode, options = {}) {
   dialog.payment = options.payment ?? null
   dialog.note = ''
   dialog.accessDays = ''
+  dialog.email = ''
+  dialog.password = ''
+  dialog.fullName = options.user?.fullName ?? ''
+  dialog.role = options.user?.role ?? 'user'
   dialog.open = true
 }
 
@@ -106,6 +126,26 @@ async function confirmDialog() {
     } else if (dialog.mode === 'grant') {
       await api.post(`/admin/users/${dialog.user.id}/grant`, body)
       toast.success('Access granted')
+    } else if (dialog.mode === 'create') {
+      const isLocked = dialog.accessDays === 'locked'
+      await api.post('/admin/users', {
+        email: dialog.email.trim(),
+        password: dialog.password,
+        fullName: dialog.fullName.trim() || null,
+        role: dialog.role,
+        accessDays: isLocked ? null : dialog.accessDays ? Number(dialog.accessDays) : null,
+        grantAccess: !isLocked,
+      })
+      toast.success('User created')
+    } else if (dialog.mode === 'edit') {
+      await api.patch(`/admin/users/${dialog.user.id}`, {
+        fullName: dialog.fullName.trim() || null,
+        role: dialog.role,
+      })
+      toast.success('User updated')
+    } else if (dialog.mode === 'delete') {
+      await api.delete(`/admin/users/${dialog.user.id}`)
+      toast.success('User deleted')
     }
 
     dialog.open = false
@@ -138,6 +178,7 @@ async function setRevoked(user, accessRevoked) {
 }
 
 function statusBadge(user) {
+  if (user.role === 'admin') return { label: 'Administrator', variant: 'purple' }
   if (user.accessRevoked) return { label: 'Revoked', variant: 'destructive' }
   if (user.paymentStatus === 'approved') return { label: 'Approved', variant: 'success' }
   if (user.paymentStatus === 'pending') return { label: 'Pending', variant: 'warning' }
@@ -157,6 +198,10 @@ function proofLabel(payment) {
       description="Review payment proofs, approve access and manage administrators."
     >
       <template #actions>
+        <Button size="sm" @click="openDialog('create')">
+          <UserPlus class="h-4 w-4" />
+          Add user
+        </Button>
         <Button variant="outline" size="sm" :disabled="loading" @click="load">
           <RotateCcw class="h-4 w-4" :class="{ 'animate-spin': loading }" />
           Refresh
@@ -272,24 +317,31 @@ function proofLabel(payment) {
               </Badge>
 
               <div class="flex flex-wrap gap-2">
-                <Button variant="outline" size="sm" @click="openDialog('grant', { user })">
+                <Button
+                  v-if="user.role !== 'admin'"
+                  variant="outline"
+                  size="sm"
+                  @click="openDialog('grant', { user })"
+                >
                   <ShieldPlus class="h-4 w-4" />
                   Grant
                 </Button>
-                <Button
-                  v-if="!user.accessRevoked"
-                  variant="outline"
-                  size="sm"
-                  class="text-destructive"
-                  @click="setRevoked(user, true)"
-                >
-                  <Ban class="h-4 w-4" />
-                  Revoke
-                </Button>
-                <Button v-else variant="outline" size="sm" @click="setRevoked(user, false)">
-                  <RotateCcw class="h-4 w-4" />
-                  Restore
-                </Button>
+                <template v-if="user.role !== 'admin'">
+                  <Button
+                    v-if="!user.accessRevoked"
+                    variant="outline"
+                    size="sm"
+                    class="text-destructive"
+                    @click="setRevoked(user, true)"
+                  >
+                    <Ban class="h-4 w-4" />
+                    Revoke
+                  </Button>
+                  <Button v-else variant="outline" size="sm" @click="setRevoked(user, false)">
+                    <RotateCcw class="h-4 w-4" />
+                    Restore
+                  </Button>
+                </template>
                 <Button
                   v-if="user.role !== 'admin'"
                   variant="outline"
@@ -307,6 +359,20 @@ function proofLabel(payment) {
                 >
                   Remove admin
                 </Button>
+                <Button variant="outline" size="sm" @click="openDialog('edit', { user })">
+                  <Pencil class="h-4 w-4" />
+                  Edit
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  class="text-destructive"
+                  :disabled="user.id === access.summary?.id"
+                  @click="openDialog('delete', { user })"
+                >
+                  <Trash2 class="h-4 w-4" />
+                  Delete
+                </Button>
               </div>
             </div>
           </div>
@@ -314,43 +380,105 @@ function proofLabel(payment) {
       </Card>
     </template>
 
-    <!-- Review / grant dialog -->
+    <!-- Review / grant / create / edit / delete dialog -->
     <Dialog
       :open="dialog.open"
       :title="dialogTitle"
-      :description="
-        dialog.mode === 'reject'
-          ? 'The user will be notified and can submit a new receipt.'
-          : 'Confirm the details below.'
-      "
+      :description="dialogDescription"
       @update:open="dialog.open = $event"
     >
       <div class="space-y-4">
+        <!-- Create -->
+        <template v-if="dialog.mode === 'create'">
+          <div class="space-y-2">
+            <label class="text-sm font-medium" for="new-email">Email</label>
+            <Input
+              id="new-email"
+              v-model="dialog.email"
+              type="email"
+              placeholder="user@example.com"
+            />
+          </div>
+          <div class="space-y-2">
+            <label class="text-sm font-medium" for="new-name">Full name</label>
+            <Input id="new-name" v-model="dialog.fullName" placeholder="Optional" />
+          </div>
+          <div class="space-y-2">
+            <label class="text-sm font-medium" for="new-password">Password</label>
+            <Input
+              id="new-password"
+              v-model="dialog.password"
+              type="password"
+              placeholder="At least 8 characters"
+            />
+          </div>
+          <div class="space-y-2">
+            <label class="text-sm font-medium">Role</label>
+            <Select v-model="dialog.role">
+              <option value="user">User</option>
+              <option value="admin">Administrator</option>
+            </Select>
+          </div>
+        </template>
+
+        <!-- Edit -->
+        <template v-else-if="dialog.mode === 'edit'">
+          <div class="space-y-2">
+            <label class="text-sm font-medium" for="edit-email">Email</label>
+            <Input id="edit-email" :model-value="dialog.user?.email" disabled />
+          </div>
+          <div class="space-y-2">
+            <label class="text-sm font-medium" for="edit-name">Full name</label>
+            <Input id="edit-name" v-model="dialog.fullName" placeholder="Optional" />
+          </div>
+          <div class="space-y-2">
+            <label class="text-sm font-medium">Role</label>
+            <Select v-model="dialog.role">
+              <option value="user">User</option>
+              <option value="admin">Administrator</option>
+            </Select>
+          </div>
+        </template>
+
+        <!-- Delete -->
         <div
-          v-if="dialog.mode !== 'grant' && dialog.payment"
-          class="rounded-lg border bg-muted/40 p-3 text-sm"
+          v-else-if="dialog.mode === 'delete'"
+          class="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm"
         >
-          <p class="font-medium">
-            {{ dialog.payment.userName || dialog.payment.userEmail }}
+          <p class="font-medium text-destructive">Delete this account?</p>
+          <p class="text-muted-foreground">
+            {{ dialog.user?.fullName || dialog.user?.email }} will be permanently removed.
           </p>
-          <p class="text-muted-foreground">Proof: {{ proofLabel(dialog.payment) }}</p>
-          <img
-            v-if="dialog.payment.proof_type === 'image' && dialog.payment.proof_image"
-            :src="dialog.payment.proof_image"
-            alt="Receipt"
-            class="mt-3 max-h-72 w-full rounded-md border object-contain"
-          />
         </div>
+
+        <!-- Review / grant -->
+        <template v-else>
+          <div
+            v-if="dialog.mode !== 'grant' && dialog.payment"
+            class="rounded-lg border bg-muted/40 p-3 text-sm"
+          >
+            <p class="font-medium">
+              {{ dialog.payment.userName || dialog.payment.userEmail }}
+            </p>
+            <p class="text-muted-foreground">Proof: {{ proofLabel(dialog.payment) }}</p>
+            <img
+              v-if="dialog.payment.proof_type === 'image' && dialog.payment.proof_image"
+              :src="dialog.payment.proof_image"
+              alt="Receipt"
+              class="mt-3 max-h-72 w-full rounded-md border object-contain"
+            />
+          </div>
+
+          <div v-else-if="dialog.user" class="rounded-lg border bg-muted/40 p-3 text-sm">
+            <p class="font-medium">{{ dialog.user.fullName || dialog.user.email }}</p>
+            <p class="text-muted-foreground">{{ dialog.user.email }}</p>
+          </div>
+        </template>
 
         <div
-          v-else-if="dialog.user"
-          class="rounded-lg border bg-muted/40 p-3 text-sm"
+          v-if="['approve', 'grant', 'create'].includes(dialog.mode) && dialog.role !== 'admin'"
+          class="space-y-2"
         >
-          <p class="font-medium">{{ dialog.user.fullName || dialog.user.email }}</p>
-          <p class="text-muted-foreground">{{ dialog.user.email }}</p>
-        </div>
-
-        <div v-if="dialog.mode !== 'reject'" class="space-y-2">
           <label class="text-sm font-medium">Access period</label>
           <Select v-model="dialog.accessDays">
             <option value="">Permanent (until revoked)</option>
@@ -358,10 +486,13 @@ function proofLabel(payment) {
             <option value="30">30 days</option>
             <option value="90">90 days</option>
             <option value="365">1 year</option>
+            <option v-if="dialog.mode === 'create'" value="locked">
+              Locked (user must submit payment)
+            </option>
           </Select>
         </div>
 
-        <div class="space-y-2">
+        <div v-if="['approve', 'reject', 'grant'].includes(dialog.mode)" class="space-y-2">
           <label class="text-sm font-medium">
             {{ dialog.mode === 'reject' ? 'Reason (recommended)' : 'Note (optional)' }}
           </label>
@@ -372,12 +503,28 @@ function proofLabel(payment) {
       <DialogFooter>
         <Button variant="outline" :disabled="acting" @click="dialog.open = false">Cancel</Button>
         <Button
-          :class="dialog.mode === 'reject' ? 'bg-destructive text-white hover:bg-destructive/90' : ''"
+          :class="
+            ['reject', 'delete'].includes(dialog.mode)
+              ? 'bg-destructive text-white hover:bg-destructive/90'
+              : ''
+          "
           :disabled="acting"
           @click="confirmDialog"
         >
           <Loader2 v-if="acting" class="h-4 w-4 animate-spin" />
-          {{ dialog.mode === 'reject' ? 'Reject' : dialog.mode === 'grant' ? 'Grant access' : 'Approve' }}
+          {{
+            dialog.mode === 'reject'
+              ? 'Reject'
+              : dialog.mode === 'grant'
+                ? 'Grant access'
+                : dialog.mode === 'create'
+                  ? 'Create user'
+                  : dialog.mode === 'edit'
+                    ? 'Save changes'
+                    : dialog.mode === 'delete'
+                      ? 'Delete'
+                      : 'Approve'
+          }}
         </Button>
       </DialogFooter>
     </Dialog>

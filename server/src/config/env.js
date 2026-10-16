@@ -1,4 +1,15 @@
-import 'dotenv/config'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+import dotenv from 'dotenv'
+
+const serverRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
+
+// `.env` holds non-secret defaults (tracked in git).
+dotenv.config({ path: path.join(serverRoot, '.env') })
+// `.env.local` overrides them and is git-ignored - put secrets (e.g.
+// SUPABASE_SERVICE_ROLE_KEY) here so they are never committed.
+dotenv.config({ path: path.join(serverRoot, '.env.local'), override: true })
+dotenv.config()
 
 function required(name, fallback) {
   const value = process.env[name] ?? fallback

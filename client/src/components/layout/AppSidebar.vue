@@ -11,7 +11,7 @@ defineProps({
 const emit = defineEmits(['close'])
 
 const access = useAccessStore()
-const sections = computed(() => buildNavSections({ isAdmin: access.isAdmin }))
+const sections = computed(() => buildNavSections({ isAdmin: access.isAdmin, locked: access.isLocked }))
 </script>
 
 <template>

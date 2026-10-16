@@ -44,7 +44,7 @@ const routes = [
         path: '',
         name: 'dashboard',
         component: () => import('@/views/DashboardView.vue'),
-        meta: { title: 'Dashboard', requiresAuth: true },
+        meta: { title: 'Dashboard', requiresAuth: true, allowLocked: true },
       },
       {
         path: 'tasks',
@@ -132,9 +132,6 @@ router.beforeEach(async (to) => {
 
   if (to.meta.allowLocked) return true
 
-  if (!access.canUse) {
-    return { name: 'access', query: { redirect: to.fullPath } }
-  }
   if (to.meta.requiresAdmin && !access.isAdmin) {
     return { name: 'dashboard' }
   }

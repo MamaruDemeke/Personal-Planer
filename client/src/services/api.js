@@ -20,6 +20,15 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * Callback invoked whenever the server rejects a request because the account is
+ * locked (unpaid / unapproved). Set once from App.vue to show a global notice.
+ */
+let lockedHandler = null
+export function setLockedHandler(handler) {
+  lockedHandler = handler
+}
+
 function buildQuery(query) {
   if (!query) return ''
   const params = new URLSearchParams()
@@ -63,8 +72,12 @@ async function request(path, { method = 'GET', body, query } = {}) {
   }
 
   if (!res.ok) {
+    const details = payload?.error?.details
     const message = payload?.error?.message || `Request failed (${res.status})`
-    throw new ApiError(message, res.status, payload?.error?.details)
+    if (res.status === 403 && typeof details?.code === 'string' && details.code.startsWith('ACCESS_')) {
+      lockedHandler?.({ message, details })
+    }
+    throw new ApiError(message, res.status, details)
   }
 
   return payload?.data ?? null
