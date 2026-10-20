@@ -59,13 +59,41 @@ async function requestPermission() {
   return permission.value
 }
 
-function notify(title, body) {
-  if (!supportsNotifications || window.Notification.permission !== 'granted') return
+function playRing() {
   try {
-    new window.Notification(title, { body, icon: '/favicon.svg' })
+    const AudioCtx = window.AudioContext || window.webkitAudioContext
+    if (!AudioCtx) return
+    const ctx = new AudioCtx()
+    const now = ctx.currentTime
+    // Two short beeps for a pleasant "ring".
+    ;[0, 0.18].forEach((offset) => {
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      osc.type = 'sine'
+      osc.frequency.value = 880
+      gain.gain.setValueAtTime(0.0001, now + offset)
+      gain.gain.exponentialRampToValueAtTime(0.25, now + offset + 0.02)
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + offset + 0.16)
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+      osc.start(now + offset)
+      osc.stop(now + offset + 0.18)
+    })
+    setTimeout(() => ctx.close().catch(() => {}), 600)
   } catch {
-    /* Ignore restricted contexts. */
+    /* Audio may be blocked until user interaction �?" ignore. */
   }
+}
+
+function notify(title, body) {
+  if (supportsNotifications && window.Notification.permission === 'granted') {
+    try {
+      new window.Notification(title, { body, icon: '/favicon.svg' })
+    } catch {
+      /* Ignore restricted contexts. */
+    }
+  }
+  playRing()
 }
 
 function alertOnce(key, title, body, tone) {

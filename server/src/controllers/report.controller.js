@@ -5,22 +5,24 @@ import { unwrap } from '../utils/db.js'
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/
 
-/** GET /api/reports?from=YYYY-MM-DD&to=YYYY-MM-DD */
+/** GET /api/reports?from=YYYY-MM-DD&to=YYYY-MM-DD&period=daily */
 export const listReports = asyncHandler(async (req, res) => {
-  const { from, to } = req.query
+  const { from, to, period } = req.query
   let query = req.supabase.from('reports').select('*').order('report_date', { ascending: false })
   if (from) query = query.gte('report_date', from)
   if (to) query = query.lte('report_date', to)
+  if (period) query = query.eq('period', period)
   const rows = unwrap(await query)
   res.json({ data: (rows ?? []).map(toCamel) })
 })
 
-/** GET /api/reports/date/:date */
+/** GET /api/reports/date/:date?period=daily */
 export const getReportByDate = asyncHandler(async (req, res) => {
   const { date } = req.params
   if (!DATE_RE.test(date)) throw ApiError.badRequest('Use the format YYYY-MM-DD')
+  const period = (req.query.period ?? 'daily').toString()
   const row = unwrap(
-    await req.supabase.from('reports').select('*').eq('report_date', date).maybeSingle(),
+    await req.supabase.from('reports').select('*').eq('report_date', date).eq('period', period).maybeSingle(),
   )
   res.json({ data: row ? toCamel(row) : null })
 })
@@ -40,7 +42,7 @@ export const createReport = asyncHandler(async (req, res) => {
   const row = unwrap(
     await req.supabase
       .from('reports')
-      .upsert(body, { onConflict: 'user_id,report_date' })
+      .upsert(body, { onConflict: 'user_id,report_date,period' })
       .select()
       .single(),
   )
@@ -75,9 +77,27 @@ export const deleteReport = asyncHandler(async (req, res) => {
 export const suggestReport = asyncHandler(async (req, res) => {
   const date = req.query.date
   if (!date || !DATE_RE.test(date)) throw ApiError.badRequest('A date (YYYY-MM-DD) is required')
+  const period = (req.query.period ?? 'daily').toString()
 
-  const start = new Date(`${date}T00:00:00.000Z`).getTime()
-  const end = start + 24 * 60 * 60 * 1000
+  const anchor = new Date(`${date}T00:00:00.000Z`)
+  let start, end
+  if (period === 'weekly') {
+    const day = anchor.getUTCDay() || 7
+    start = new Date(anchor)
+    start.setUTCDate(anchor.getUTCDate() - (day - 1))
+    start.setUTCHours(0, 0, 0, 0)
+    end = new Date(start)
+    end.setUTCDate(start.getUTCDate() + 7)
+  } else if (period === 'monthly') {
+    start = new Date(Date.UTC(anchor.getUTCFullYear(), anchor.getUTCMonth(), 1))
+    end = new Date(Date.UTC(anchor.getUTCFullYear(), anchor.getUTCMonth() + 1, 1))
+  } else if (period === 'yearly') {
+    start = new Date(Date.UTC(anchor.getUTCFullYear(), 0, 1))
+    end = new Date(Date.UTC(anchor.getUTCFullYear() + 1, 0, 1))
+  } else {
+    start = new Date(`${date}T00:00:00.000Z`)
+    end = new Date(start.getTime() + 24 * 60 * 60 * 1000)
+  }
 
   const rows = unwrap(await req.supabase.from('tasks').select('*')) ?? []
   const tasks = rows.map(toCamel)
@@ -85,16 +105,17 @@ export const suggestReport = asyncHandler(async (req, res) => {
   const completed = tasks.filter((t) => {
     if (!t.completedAt) return false
     const at = new Date(t.completedAt).getTime()
-    return at >= start && at < end
+    return at >= start.getTime() && at < end.getTime()
   })
   const ongoing = tasks.filter((t) => t.status === 'in_progress')
   const pending = tasks.filter((t) => t.status === 'not_started')
 
-  const join = (list) => list.map((t) => `• ${t.title}`).join('\n')
+  const join = (list) => list.map((t) => `• ${t.title}`).join('\\n')
 
   res.json({
     data: {
       date,
+      period,
       completed: join(completed),
       ongoing: join(ongoing),
       pending: join(pending),

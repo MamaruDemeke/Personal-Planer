@@ -95,9 +95,17 @@ If port 4000 or 5173 is already in use, a stale dev stack is still running. Stop
 
 1. **Create the database schema.** In your Supabase project open the **SQL Editor** and run, in
    order:
-   - `supabase/migrations/0001_init_schema.sql` — tables (`profiles`, `categories`, `tasks`,
-     `reports`), enums, and triggers
+   - `supabase/migrations/0001_init_schema.sql` — tables (`profiles`, `categories`,
+     `tasks`, `reports`), enums, and triggers
    - `supabase/migrations/0002_row_level_security.sql` — owner-only RLS policies
+   - `supabase/migrations/0003_admin_access.sql` — roles, payment verification and access gating
+   - `supabase/migrations/0004_admin_delete_user.sql` — admin account-deletion helper
+   - `supabase/migrations/0005_task_plan.sql` — adds the `tasks.plan` column to databases
+     created before the plan feature (fixes "plan column not found" on older projects)
+   - `supabase/migrations/0006_recurring_and_subtasks.sql` — recurring tasks + sub-tasks
+     (Todoist-style) columns on `tasks`
+   - `supabase/migrations/0007_report_periods.sql` — adds `period` to reports (daily/weekly/
+     monthly/yearly)
 
    > `0001` begins by dropping the app tables so it can be re-run. On an existing project this
    > **resets their data** — intended for the fresh Worker Planner schema.

@@ -17,7 +17,14 @@ export function createApp() {
       origin(origin, callback) {
         // Allow same-origin / server-to-server (no origin) and whitelisted origins.
         if (!origin || env.corsOrigins.includes(origin)) return callback(null, true)
-        return callback(new Error('Not allowed by CORS'))
+        // In development Vite falls back to another port when 5173 is busy (e.g.
+        // 5174), so allow any localhost origin instead of breaking the API.
+        if (!isProduction && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
+          return callback(null, true)
+        }
+        // Disallowed origin: omit the CORS header (the browser blocks it) rather
+        // than throwing, which would surface as a confusing 500.
+        return callback(null, false)
       },
       credentials: true,
     }),

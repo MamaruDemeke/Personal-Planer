@@ -2,7 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useDebounceFn } from '@vueuse/core'
-import { ArrowDownUp, Calendar, CalendarClock, CalendarDays, CalendarRange, ListTodo, Plus, Search } from 'lucide-vue-next'
+import { ArrowDownUp, Calendar, CalendarClock, CalendarDays, CalendarRange, ListTodo, Loader2, Plus, Search } from 'lucide-vue-next'
 
 import PageHeader from '@/components/common/PageHeader.vue'
 import LoadingState from '@/components/common/LoadingState.vue'
@@ -11,12 +11,15 @@ import EmptyState from '@/components/common/EmptyState.vue'
 import ResourceFormDialog from '@/components/forms/ResourceFormDialog.vue'
 import ConfirmDeleteDialog from '@/components/common/ConfirmDeleteDialog.vue'
 import TaskListItem from '@/components/tasks/TaskListItem.vue'
+import TaskPriorityBadge from '@/components/tasks/TaskPriorityBadge.vue'
+import TaskPlanBadge from '@/components/tasks/TaskPlanBadge.vue'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import Select from '@/components/ui/Select.vue'
 import { taskSchema } from '@/schemas'
-import { TASK_PRIORITIES, TASK_STATUSES, TASK_PLANS } from '@/lib/constants'
+import { TASK_PRIORITIES, TASK_STATUSES, TASK_PLANS, TASK_RECURRENCES } from '@/lib/constants'
+import { parseQuickAdd } from '@/lib/quickAdd'
 import { useTasksStore } from '@/stores/tasks'
 import { useCategoriesStore } from '@/stores/categories'
 import { useDashboardStore } from '@/stores/dashboard'
@@ -32,6 +35,45 @@ const toast = useToast()
 const { ensureWrite } = useAccessGate()
 
 const search = ref(typeof route.query.search === 'string' ? route.query.search : '')
+
+const viewMode = ref('list') // 'list' | 'board'
+
+const boardColumns = [
+  { value: 'not_started', label: 'To do' },
+  { value: 'in_progress', label: 'In progress' },
+  { value: 'completed', label: 'Done' },
+]
+
+function tasksByStatus(status) {
+  return tasksStore.items.filter((t) => t.status === status)
+}
+
+let draggedId = null
+function onDragStart(e, id) {
+  draggedId = id
+  e.dataTransfer?.setData('text/plain', id)
+}
+async function onDrop(e, status) {
+  e.preventDefault()
+  const id = draggedId || e.dataTransfer?.getData('text/plain')
+  draggedId = null
+  if (!id) return
+  const task = tasksStore.items.find((t) => t.id === id)
+  if (!task || task.status === status) return
+  if (!ensureWrite()) return
+  try {
+    await tasksStore.update(id, { status, progress: status === 'completed' ? 100 : task.progress })
+    dashboard.invalidate()
+    toast.success('Task moved')
+  } catch (err) {
+    toast.error('Could not move task', err?.message)
+  }
+}
+
+// Quick add (Todoist-style natural language)
+const quickText = ref('')
+const quickAdding = ref(false)
+const quickPreview = computed(() => (quickText.value.trim() ? parseQuickAdd(quickText.value) : null))
 const statusFilter = ref('')
 const priorityFilter = ref('')
 const categoryFilter = ref('')
@@ -94,7 +136,6 @@ const fields = computed(() => [
     ],
   },
   { name: 'description', label: 'Description', type: 'textarea', span: 2, placeholder: 'What needs to be done?' },
-  { name: 'notes', label: 'Notes', type: 'textarea', span: 2, placeholder: 'Extra notes' },
   { name: 'categoryId', label: 'Category', type: 'select', options: categoryOptions.value },
   { name: 'priority', label: 'Priority', type: 'select', required: true, default: 'medium', options: TASK_PRIORITIES },
   { name: 'status', label: 'Status', type: 'select', default: 'not_started', options: TASK_STATUSES },
@@ -132,6 +173,32 @@ function askDelete(task) {
 
 function toggleOrder() {
   order.value = order.value === 'asc' ? 'desc' : 'asc'
+}
+
+async function quickAdd() {
+  if (!ensureWrite()) return
+  const parsed = parseQuickAdd(quickText.value)
+  if (!parsed.title) return
+  quickAdding.value = true
+  try {
+    await tasksStore.create({
+      title: parsed.title,
+      priority: parsed.priority,
+      recurrence: parsed.recurrence,
+      plan: parsed.plan,
+      startDate: parsed.startDate,
+      deadline: parsed.deadline,
+      status: 'not_started',
+      progress: 0,
+    })
+    dashboard.invalidate()
+    toast.success('Task added')
+    quickText.value = ''
+  } catch (err) {
+    toast.error('Could not add task', err?.message)
+  } finally {
+    quickAdding.value = false
+  }
 }
 
 async function submit(values) {
@@ -187,12 +254,39 @@ function toggleComplete(task) {
   <div class="space-y-4 sm:space-y-6">
     <PageHeader title="My Tasks" description="Create, organise and track every task.">
       <template #actions>
+        <div class="flex items-center gap-1 rounded-md border p-0.5">
+          <Button :variant="viewMode === 'list' ? 'default' : 'ghost'" size="sm" @click="viewMode = 'list'">List</Button>
+          <Button :variant="viewMode === 'board' ? 'default' : 'ghost'" size="sm" @click="viewMode = 'board'">Board</Button>
+        </div>
         <Button @click="openCreate">
           <Plus class="h-4 w-4" />
           Add task
         </Button>
       </template>
     </PageHeader>
+
+    <Card>
+      <CardContent class="space-y-2 pt-3.5 sm:pt-4">
+        <div class="flex items-center gap-2">
+          <Plus class="h-4 w-4 text-muted-foreground" />
+          <Input
+            v-model="quickText"
+            placeholder='Quick add: "Buy milk tomorrow p1 every week"'
+            @keydown.enter.prevent="quickAdd"
+          />
+          <Button :disabled="quickAdding || !quickText.trim()" @click="quickAdd">
+            <Loader2 v-if="quickAdding" class="h-4 w-4 animate-spin" />
+            Add
+          </Button>
+        </div>
+        <p v-if="quickPreview && quickText.trim()" class="text-xs text-muted-foreground">
+          {{ quickPreview.title }}
+          <span v-if="quickPreview.priority !== 'medium'" class="ml-1">· {{ quickPreview.priority }}</span>
+          <span v-if="quickPreview.recurrence !== 'none'" class="ml-1">· repeats {{ quickPreview.recurrence }}</span>
+          <span v-if="quickPreview.deadline" class="ml-1">· due {{ new Date(quickPreview.deadline).toLocaleDateString() }}</span>
+        </p>
+      </CardContent>
+    </Card>
 
     <Card>
       <CardContent class="grid gap-2.5 pt-3.5 sm:pt-4 lg:grid-cols-12">
@@ -272,7 +366,7 @@ function toggleComplete(task) {
       </template>
     </EmptyState>
 
-    <ul v-else class="space-y-2">
+    <ul v-else-if="viewMode === 'list'" class="space-y-2">
       <TaskListItem
         v-for="task in tasksStore.items"
         :key="task.id"
@@ -284,6 +378,43 @@ function toggleComplete(task) {
         @set-progress="(value) => setProgress(task, value)"
       />
     </ul>
+
+    <div v-else class="grid gap-3 md:grid-cols-3">
+      <div
+        v-for="col in boardColumns"
+        :key="col.value"
+        class="rounded-lg border bg-muted/30 p-3"
+        @dragover.prevent
+        @drop="onDrop($event, col.value)"
+      >
+        <h3 class="mb-2 flex items-center justify-between text-sm font-semibold">
+          <span>{{ col.label }}</span>
+          <span class="text-xs text-muted-foreground">{{ tasksByStatus(col.value).length }}</span>
+        </h3>
+        <div class="space-y-2">
+          <div
+            v-for="task in tasksByStatus(col.value)"
+            :key="task.id"
+            class="cursor-move rounded-md border bg-card p-2.5 text-sm shadow-sm"
+            draggable="true"
+            @dragstart="onDragStart($event, task.id)"
+          >
+            <p class="font-medium">{{ task.title }}</p>
+            <div class="mt-1 flex flex-wrap items-center gap-1.5">
+              <TaskPriorityBadge :priority="task.priority" />
+              <TaskPlanBadge :plan="task.plan" />
+            </div>
+            <div class="mt-1.5 flex items-center justify-between text-xs text-muted-foreground">
+              <span>{{ task.progress ?? 0 }}%</span>
+              <span v-if="task.deadline">{{ new Date(task.deadline).toLocaleDateString() }}</span>
+            </div>
+          </div>
+          <p v-if="!tasksByStatus(col.value).length" class="py-4 text-center text-xs text-muted-foreground">
+            Drop tasks here
+          </p>
+        </div>
+      </div>
+    </div>
 
     <ResourceFormDialog
       v-model:open="dialogOpen"

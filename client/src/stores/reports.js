@@ -25,14 +25,14 @@ export const useReportsStore = defineStore('reports', () => {
     }
   }
 
-  /** @param {string} date YYYY-MM-DD */
-  function getByDate(date) {
-    return api.get(`/reports/date/${date}`)
+  /** @param {string} date YYYY-MM-DD @param {string} period */
+  function getByDate(date, period = 'daily') {
+    return api.get(`/reports/date/${date}`, { period })
   }
 
-  /** @param {string} date YYYY-MM-DD */
-  function suggest(date) {
-    return api.get('/reports/suggest', { date })
+  /** @param {string} date YYYY-MM-DD @param {string} period */
+  function suggest(date, period = 'daily') {
+    return api.get('/reports/suggest', { date, period })
   }
 
   async function save(payload) {

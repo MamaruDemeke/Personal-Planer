@@ -3,6 +3,7 @@ import { z } from 'zod'
 export const PRIORITIES = ['low', 'medium', 'high']
 export const STATUSES = ['not_started', 'in_progress', 'completed']
 export const PLANS = ['daily', 'weekly', 'monthly', 'yearly']
+export const RECURRENCES = ['none', 'daily', 'weekly', 'monthly', 'yearly']
 
 /**
  * Dates arrive as ISO strings (the client sends `Date.toISOString()`), are
@@ -25,8 +26,10 @@ const baseTask = {
   categoryId: z.union([z.string().uuid(), z.null()]).optional(),
   priority: z.enum(PRIORITIES).optional(),
   status: z.enum(STATUSES).optional(),
-  plan: z.enum(PLANS).optional(),
-  startDate: dateField,
+   plan: z.enum(PLANS).optional(),
+   recurrence: z.enum(RECURRENCES).optional(),
+   parentId: z.union([z.string().uuid(), z.null()]).optional(),
+   startDate: dateField,
   deadline: dateField,
   progress: z.number().int().min(0).max(100).optional(),
 }

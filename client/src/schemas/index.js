@@ -37,6 +37,7 @@ const progressValue = z.preprocess(
 export const TASK_PRIORITY_VALUES = ['low', 'medium', 'high']
 export const TASK_STATUS_VALUES = ['not_started', 'in_progress', 'completed']
 export const TASK_PLAN_VALUES = ['daily', 'weekly', 'monthly', 'yearly']
+export const TASK_RECURRENCE_VALUES = ['none', 'daily', 'weekly', 'monthly', 'yearly']
 
 export const taskSchema = z
   .object({
@@ -51,6 +52,7 @@ export const taskSchema = z
     priority: z.enum(TASK_PRIORITY_VALUES).default('medium'),
     status: z.enum(TASK_STATUS_VALUES).default('not_started'),
     plan: z.enum(TASK_PLAN_VALUES).default('daily'),
+    recurrence: z.enum(TASK_RECURRENCE_VALUES).default('none'),
     startDate: optionalDate,
     deadline: optionalDate,
     progress: progressValue,

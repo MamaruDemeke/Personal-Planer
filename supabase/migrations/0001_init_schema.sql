@@ -29,6 +29,8 @@ drop table if exists public.projects cascade;
 drop type if exists public.task_status cascade;
 drop type if exists public.task_priority cascade;
 drop type if exists public.task_plan cascade;
+drop type if exists public.task_recurrence cascade;
+drop type if exists public.report_period cascade;
 drop type if exists public.project_status cascade;
 drop type if exists public.goal_status cascade;
 drop type if exists public.reminder_channel cascade;
@@ -42,6 +44,8 @@ drop type if exists public.plan_status cascade;
 create type public.task_priority as enum ('low', 'medium', 'high');
 create type public.task_status as enum ('not_started', 'in_progress', 'completed');
 create type public.task_plan as enum ('daily', 'weekly', 'monthly', 'yearly');
+create type public.task_recurrence as enum ('none', 'daily', 'weekly', 'monthly', 'yearly');
+create type public.report_period as enum ('daily', 'weekly', 'monthly', 'yearly');
 
 -- -----------------------------------------------------------------------------
 -- Shared trigger: keep updated_at fresh
@@ -108,6 +112,8 @@ create table public.tasks (
   priority        public.task_priority not null default 'medium',
   status          public.task_status not null default 'not_started',
   plan            public.task_plan not null default 'daily',
+  recurrence      public.task_recurrence not null default 'none',
+  parent_id       uuid references public.tasks (id) on delete cascade,
   start_date      timestamptz,
   deadline        timestamptz,
   progress        integer not null default 0 check (progress between 0 and 100),
@@ -123,6 +129,8 @@ create table public.tasks (
 create index idx_tasks_user on public.tasks (user_id);
 create index idx_tasks_user_status on public.tasks (user_id, status);
 create index idx_tasks_user_plan on public.tasks (user_id, plan);
+create index idx_tasks_user_recurrence on public.tasks (user_id, recurrence);
+create index idx_tasks_parent on public.tasks (parent_id);
 create index idx_tasks_user_deadline on public.tasks (user_id, deadline);
 create index idx_tasks_category on public.tasks (category_id);
 create trigger trg_tasks_updated_at
@@ -188,6 +196,7 @@ create table public.reports (
   id            uuid primary key default gen_random_uuid(),
   user_id       uuid not null references auth.users (id) on delete cascade,
   report_date   date not null,
+  period        public.report_period not null default 'daily',
   completed     text,
   ongoing       text,
   pending       text,
@@ -196,7 +205,7 @@ create table public.reports (
   tomorrow_plan text,
   created_at    timestamptz not null default now(),
   updated_at    timestamptz not null default now(),
-  unique (user_id, report_date)
+  unique (user_id, report_date, period)
 );
 
 create index idx_reports_user_date on public.reports (user_id, report_date desc);

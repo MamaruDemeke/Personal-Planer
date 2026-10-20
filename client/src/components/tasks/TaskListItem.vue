@@ -20,10 +20,10 @@ const completed = computed(() => props.task.isCompleted ?? props.task.status ===
 const progress = computed(() => props.task.progress ?? 0)
 
 const progressColor = computed(() => {
-  if (progress.value >= 100) return '#22c55e'
-  if (props.task.overdue) return '#ef4444'
+  if (progress.value >= 100) return 'linear-gradient(90deg, #22c55e, #16a34a)'
+  if (props.task.overdue) return 'linear-gradient(90deg, #ef4444, #dc2626)'
   if (progress.value <= 0) return 'var(--muted-foreground)'
-  return '#0d9488'
+  return 'linear-gradient(90deg, #3b82f6, #8b5cf6)'
 })
 </script>
 
@@ -93,7 +93,7 @@ const progressColor = computed(() => {
       <Progress
         :model-value="progress"
         class="flex-1"
-        :indicator-style="{ backgroundColor: progressColor }"
+        :indicator-style="{ background: progressColor }"
       />
       <span class="w-10 shrink-0 text-right text-xs font-medium tabular-nums text-muted-foreground">
         {{ progress }}%

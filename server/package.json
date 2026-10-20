@@ -6,7 +6,9 @@
   "description": "Worker Planner REST API (Express + Supabase).",
   "main": "src/server.js",
   "scripts": {
+    "predev": "node scripts/free-port.js",
     "dev": "node --watch-path=src --watch-path=.env --watch-path=.env.local src/server.js",
+    "prestart": "node scripts/free-port.js",
     "start": "node src/server.js"
   },
   "dependencies": {

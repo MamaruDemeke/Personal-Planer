@@ -20,19 +20,37 @@ const reports = useReportsStore()
 const toast = useToast()
 const { ensureWrite } = useAccessGate()
 
-const SECTIONS = [
-  { key: 'completed', label: 'Work completed' },
-  { key: 'ongoing', label: 'Work in progress' },
-  { key: 'pending', label: 'Pending work' },
-  { key: 'blockers', label: 'Blockers / issues' },
-  { key: 'achievements', label: 'Achievements' },
-  { key: 'tomorrowPlan', label: "Tomorrow's plan" },
+const PERIODS = [
+  { value: 'daily', label: 'Daily' },
+  { value: 'weekly', label: 'Weekly' },
+  { value: 'monthly', label: 'Monthly' },
+  { value: 'yearly', label: 'Yearly' },
 ]
+const period = ref('daily')
+
+const PERIOD_LABELS = { daily: 'Daily', weekly: 'Weekly', monthly: 'Monthly', yearly: 'Yearly' }
+
+const SECTIONS = computed(() => {
+  const suffix =
+    period.value === 'daily' ? 'today' : period.value === 'weekly' ? 'this week' : period.value === 'monthly' ? 'this month' : 'this year'
+  const base = [
+    { key: 'completed', label: `Work completed ${suffix}` },
+    { key: 'ongoing', label: 'Work in progress' },
+    { key: 'pending', label: 'Pending work' },
+    { key: 'blockers', label: 'Blockers / issues' },
+    { key: 'achievements', label: 'Achievements' },
+  ]
+  if (period.value === 'daily') {
+    base.push({ key: 'tomorrowPlan', label: "Tomorrow's plan" })
+  }
+  return base
+})
 
 const todayStr = format(new Date(), 'yyyy-MM-dd')
 
 const form = reactive({
   reportDate: todayStr,
+  period: 'daily',
   completed: '',
   ongoing: '',
   pending: '',
@@ -47,23 +65,29 @@ const saving = ref(false)
 const suggesting = ref(false)
 
 onMounted(() => {
-  reports.load({}, { force: true }).catch(() => {})
-  loadReport(form.reportDate)
+  reports.load({ period: period.value }, { force: true }).catch(() => {})
+  loadReport(form.reportDate, period.value)
 })
 
 watch(
   () => form.reportDate,
   (date) => {
-    if (date) loadReport(date)
+    if (date) loadReport(date, period.value)
   },
 )
 
-async function loadReport(date) {
+watch(period, (p) => {
+  form.period = p
+  reports.load({ period: p }, { force: true }).catch(() => {})
+  loadReport(form.reportDate, p)
+})
+
+async function loadReport(date, p = period.value) {
   loadingReport.value = true
   try {
-    const report = await reports.getByDate(date)
+    const report = await reports.getByDate(date, p)
     currentId.value = report?.id ?? null
-    for (const { key } of SECTIONS) form[key] = report?.[key] ?? ''
+    for (const { key } of SECTIONS.value) form[key] = report?.[key] ?? ''
   } catch (err) {
     toast.error('Could not load report', err?.message)
   } finally {
@@ -74,7 +98,7 @@ async function loadReport(date) {
 async function suggest() {
   suggesting.value = true
   try {
-    const s = await reports.suggest(form.reportDate)
+    const s = await reports.suggest(form.reportDate, period.value)
     form.completed = s.completed || form.completed
     form.ongoing = s.ongoing || form.ongoing
     form.pending = s.pending || form.pending
@@ -90,7 +114,7 @@ async function save() {
   if (!ensureWrite()) return
   saving.value = true
   try {
-    const row = await reports.save({ ...form })
+    const row = await reports.save({ ...form, period: period.value })
     currentId.value = row.id
     toast.success('Report saved')
   } catch (err) {
@@ -106,7 +130,7 @@ async function remove() {
   try {
     await reports.remove(currentId.value)
     currentId.value = null
-    for (const { key } of SECTIONS) form[key] = ''
+    for (const { key } of SECTIONS.value) form[key] = ''
     toast.success('Report deleted')
   } catch (err) {
     toast.error('Could not delete report', err?.message)
@@ -115,13 +139,14 @@ async function remove() {
 
 function selectReport(report) {
   form.reportDate = report.reportDate
+  if (report.period) period.value = report.period
 }
 
-const isEmptyReport = computed(() => SECTIONS.every(({ key }) => !form[key]?.trim()))
+const isEmptyReport = computed(() => SECTIONS.value.every(({ key }) => !form[key]?.trim()))
 
 function exportMarkdown() {
-  const lines = [`# Daily Work Report — ${formatDate(form.reportDate)}`, '']
-  for (const { key, label } of SECTIONS) {
+  const lines = [`# ${PERIODS.find((p) => p.value === period.value)?.label} Work Report — ${formatDate(form.reportDate)}`, '']
+  for (const { key, label } of SECTIONS.value) {
     lines.push(`## ${label}`, form[key]?.trim() || '—', '')
   }
   const blob = new Blob([lines.join('\n')], { type: 'text/markdown;charset=utf-8' })
@@ -135,7 +160,7 @@ function exportMarkdown() {
 }
 
 function printReport() {
-  const rows = SECTIONS.map(({ key, label }) => {
+  const rows = SECTIONS.value.map(({ key, label }) => {
     const value = (form[key]?.trim() || '—').replace(/[<>&]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' })[c])
     return `<section><h2>${label}</h2><p>${value.replace(/\n/g, '<br>')}</p></section>`
   }).join('')
@@ -158,8 +183,19 @@ function printReport() {
 
 <template>
   <div class="space-y-4 sm:space-y-6">
-    <PageHeader title="Daily Reports" description="Record what you did, blocked on, and plan for tomorrow.">
+    <PageHeader :title="`${PERIODS.find((p) => p.value === period).label} Reports`" description="Record what you did, blocked on, and plan for the next period.">
       <template #actions>
+        <div class="flex items-center gap-1 rounded-md border p-0.5">
+          <Button
+            v-for="p in PERIODS"
+            :key="p.value"
+            :variant="period === p.value ? 'default' : 'ghost'"
+            size="sm"
+            @click="period = p.value"
+          >
+            {{ p.label }}
+          </Button>
+        </div>
         <Button variant="outline" :disabled="suggesting" @click="suggest">
           <Loader2 v-if="suggesting" class="h-4 w-4 animate-spin" />
           <Sparkles v-else class="h-4 w-4" />

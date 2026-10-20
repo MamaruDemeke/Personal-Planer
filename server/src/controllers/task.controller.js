@@ -3,6 +3,22 @@ import { asyncHandler } from '../utils/asyncHandler.js'
 import { toCamel, toSnake } from '../utils/case.js'
 import { unwrap } from '../utils/db.js'
 
+function addDaysIso(d, n) {
+  const x = new Date(d)
+  x.setUTCDate(x.getUTCDate() + n)
+  return x.toISOString()
+}
+function addMonthsIso(d, n) {
+  const x = new Date(d)
+  x.setUTCMonth(x.getUTCMonth() + n)
+  return x.toISOString()
+}
+function addYearsIso(d, n) {
+  const x = new Date(d)
+  x.setUTCFullYear(x.getUTCFullYear() + n)
+  return x.toISOString()
+}
+
 /** Add server-derived fields (overdue, on-time) to a task row. */
 function decorate(task) {
   const isCompleted = task.status === 'completed'
@@ -83,10 +99,59 @@ export const createTask = asyncHandler(async (req, res) => {
 export const updateTask = asyncHandler(async (req, res) => {
   const patch = toSnake(req.body)
   if (Object.keys(patch).length === 0) throw ApiError.badRequest('No fields to update')
+
+  // Load the existing row so we can react to status transitions (recurring tasks).
+  const existing = unwrap(
+    await req.supabase.from('tasks').select('*').eq('id', req.params.id).maybeSingle(),
+  )
+  if (!existing) throw ApiError.notFound('Task not found')
+
   const row = unwrap(
     await req.supabase.from('tasks').update(patch).eq('id', req.params.id).select().maybeSingle(),
   )
   if (!row) throw ApiError.notFound('Task not found')
+
+  // Auto-generate the next occurrence of a recurring task when it is completed.
+  const becameCompleted =
+    (patch.status === 'completed' || patch.progress === 100) &&
+    existing.status !== 'completed' &&
+    (existing.recurrence ?? 'none') !== 'none'
+
+  if (becameCompleted) {
+    const shift = (d) => {
+      if (!d) return null
+      const date = new Date(d)
+      switch (existing.recurrence) {
+        case 'daily':
+          return addDaysIso(date, 1)
+        case 'weekly':
+          return addDaysIso(date, 7)
+        case 'monthly':
+          return addMonthsIso(date, 1)
+        case 'yearly':
+          return addYearsIso(date, 1)
+        default:
+          return d
+      }
+    }
+    const next = {
+      user_id: existing.user_id,
+      title: existing.title,
+      description: existing.description,
+      notes: existing.notes,
+      category_id: existing.category_id,
+      priority: existing.priority,
+      status: 'not_started',
+      plan: existing.plan,
+      recurrence: existing.recurrence,
+      parent_id: existing.parent_id,
+      progress: 0,
+      start_date: shift(existing.start_date),
+      deadline: shift(existing.deadline),
+    }
+    await req.supabase.from('tasks').insert(next)
+  }
+
   res.json({ data: decorate(toCamel(row)) })
 })
 

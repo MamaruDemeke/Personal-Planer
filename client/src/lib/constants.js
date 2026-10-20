@@ -34,6 +34,14 @@ export const TASK_PLANS = [
   { value: 'yearly', label: 'Yearly', description: 'This year', color: '#22c55e' },
 ]
 
+export const TASK_RECURRENCES = [
+  { value: 'none', label: 'Does not repeat' },
+  { value: 'daily', label: 'Daily' },
+  { value: 'weekly', label: 'Weekly' },
+  { value: 'monthly', label: 'Monthly' },
+  { value: 'yearly', label: 'Yearly' },
+]
+
 const toMap = (list) => Object.fromEntries(list.map((item) => [item.value, item.label]))
 
 export const PRIORITY_LABELS = toMap(TASK_PRIORITIES)
