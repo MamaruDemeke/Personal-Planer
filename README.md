@@ -106,6 +106,7 @@ If port 4000 or 5173 is already in use, a stale dev stack is still running. Stop
      (Todoist-style) columns on `tasks`
    - `supabase/migrations/0007_report_periods.sql` — adds `period` to reports (daily/weekly/
      monthly/yearly)
+   - `supabase/migrations/0008_personal_diary.sql` — personal diary / notes table
 
    > `0001` begins by dropping the app tables so it can be re-run. On an existing project this
    > **resets their data** — intended for the fresh Worker Planner schema.

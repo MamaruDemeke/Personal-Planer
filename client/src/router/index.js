@@ -95,6 +95,12 @@ const routes = [
         meta: { title: 'Settings', requiresAuth: true },
       },
       {
+        path: 'diary',
+        name: 'diary',
+        component: () => import('@/views/DiaryView.vue'),
+        meta: { title: 'Personal Diary', requiresAuth: true },
+      },
+      {
         path: 'admin',
         name: 'admin',
         component: () => import('@/views/AdminView.vue'),

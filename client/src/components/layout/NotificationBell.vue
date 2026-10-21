@@ -25,7 +25,10 @@ const toast = useToast()
 const router = useRouter()
 
 const enabled = reminders.enabled
-const totalCount = computed(() => reminders.totalCount + notifications.pendingCount)
+const overdue = reminders.overdue
+const upcoming = reminders.upcoming
+const dueSoonCount = reminders.dueSoonCount
+const totalCount = computed(() => (reminders.totalCount?.value ?? reminders.totalCount ?? 0) + (notifications.pendingCount?.value ?? notifications.pendingCount ?? 0))
 
 let timer = null
 onMounted(() => {
@@ -92,15 +95,15 @@ async function enable() {
             </p>
             <p class="truncate text-xs text-muted-foreground">{{ item.body }}</p>
           </div>
-          <DropdownMenuSeparator v-if="reminders.overdue.length || reminders.upcoming.length" />
+          <DropdownMenuSeparator v-if="overdue.length || upcoming.length" />
         </template>
 
-        <template v-if="reminders.overdue.length">
+        <template v-if="overdue.length">
           <p class="px-2 pt-1.5 text-xs font-semibold uppercase tracking-wide text-destructive">
             Overdue
           </p>
           <div
-            v-for="task in reminders.overdue.slice(0, 5)"
+            v-for="task in overdue.slice(0, 5)"
             :key="task.id"
             class="rounded-md px-2 py-1.5"
           >
@@ -109,12 +112,12 @@ async function enable() {
           </div>
         </template>
 
-        <template v-if="reminders.dueSoonCount">
+        <template v-if="dueSoonCount">
           <p class="px-2 pt-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Due soon
           </p>
           <div
-            v-for="task in reminders.upcoming.slice(0, 5)"
+            v-for="task in upcoming.slice(0, 5)"
             :key="task.id"
             class="rounded-md px-2 py-1.5"
           >
@@ -124,7 +127,7 @@ async function enable() {
         </template>
 
         <p
-          v-if="!notifications.items.length && !reminders.overdue.length && !reminders.upcoming.length"
+          v-if="!notifications.items.length && !overdue.length && !upcoming.length"
           class="px-2 py-6 text-center text-sm text-muted-foreground"
         >
           You're all caught up.

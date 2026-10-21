@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import Select from '@/components/ui/Select.vue'
 import Textarea from '@/components/ui/Textarea.vue'
+import RichTextEditor from '@/components/common/RichTextEditor.vue'
 
 /**
  * Config-driven create/edit dialog.
@@ -163,6 +164,13 @@ const dialogTitle = computed(() => props.title)
               v-bind="metas[field.name]"
               :placeholder="field.placeholder"
               :rows="field.rows || 3"
+            />
+
+            <RichTextEditor
+              v-else-if="field.type === 'richtext'"
+              v-model="models[field.name]"
+              :placeholder="field.placeholder"
+              :rows="field.rows || 6"
             />
 
             <Select

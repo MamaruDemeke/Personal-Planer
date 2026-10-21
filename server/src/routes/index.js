@@ -9,6 +9,7 @@ import progressRoutes from './progress.routes.js'
 import paymentRoutes from './payment.routes.js'
 import adminRoutes from './admin.routes.js'
 import notificationRoutes from './notification.routes.js'
+import noteRoutes from './note.routes.js'
 
 import { requireAuth } from '../middleware/auth.js'
 import { loadProfile, requireAdmin, requireApprovedToWrite } from '../middleware/access.js'
@@ -21,6 +22,7 @@ router.use('/health', healthRoutes)
 router.use('/auth', requireAuth, loadProfile, authRoutes)
 router.use('/payments', requireAuth, loadProfile, paymentRoutes)
 router.use('/notifications', requireAuth, loadProfile, notificationRoutes)
+router.use('/notes', requireAuth, loadProfile, noteRoutes)
 
 // Administrator-only.
 router.use('/admin', requireAuth, loadProfile, requireAdmin, adminRoutes)

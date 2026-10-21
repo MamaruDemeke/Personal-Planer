@@ -33,7 +33,7 @@ const sections = computed(() => buildNavSections({ isAdmin: access.isAdmin, lock
   <aside
     :class="
       cn(
-        'fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r bg-[#DBEAFE] transition-transform duration-200 lg:translate-x-0',
+        'fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r bg-gradient-to-b from-[#DBEAFE] via-[#EFF6FF] to-white transition-transform duration-200 lg:translate-x-0',
         open ? 'translate-x-0' : '-translate-x-full',
       )
     "
@@ -58,7 +58,7 @@ const sections = computed(() => buildNavSections({ isAdmin: access.isAdmin, lock
 
     <nav class="flex-1 space-y-5 overflow-y-auto px-3 py-4">
       <div v-for="section in sections" :key="section.title" class="space-y-1">
-        <p class="px-3 text-xs font-semibold uppercase tracking-wider text-slate-700">
+        <p class="px-3 text-xs font-semibold uppercase tracking-wider text-blue-700">
           {{ section.title }}
         </p>
         <RouterLink
@@ -66,7 +66,7 @@ const sections = computed(() => buildNavSections({ isAdmin: access.isAdmin, lock
           :key="item.label"
           :to="item.to"
           class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-800 transition-colors hover:bg-blue-200/60 hover:text-slate-900"
-          active-class="bg-blue-300/60 text-slate-900 hover:bg-blue-300/60 hover:text-slate-900"
+          active-class="bg-gradient-to-r from-blue-400/40 to-indigo-400/40 text-blue-900 font-semibold shadow-sm border-l-4 border-blue-600"
           @click="emit('close')"
         >
           <component :is="item.icon" class="h-4 w-4 shrink-0" />

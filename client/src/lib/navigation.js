@@ -1,5 +1,6 @@
 import {
   BadgeCheck,
+  BookOpen,
   Calendar,
   CalendarDays,
   CalendarRange,
@@ -41,6 +42,7 @@ export function buildNavSections({ isAdmin = false, locked = false } = {}) {
       items: [
         { label: 'Progress', to: { name: 'progress' }, icon: TrendingUp },
         { label: 'Reports', to: { name: 'reports' }, icon: FileText },
+        { label: 'Personal Diary', to: { name: 'diary' }, icon: BookOpen },
         { label: 'Settings', to: { name: 'settings' }, icon: Settings },
       ],
     },

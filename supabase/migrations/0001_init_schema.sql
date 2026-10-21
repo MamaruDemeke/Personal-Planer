@@ -15,6 +15,7 @@ create extension if not exists pgcrypto;
 -- Drop previous schema (safe / idempotent) so this file can be re-run.
 -- -----------------------------------------------------------------------------
 drop table if exists public.reports cascade;
+drop table if exists public.notes cascade;
 drop table if exists public.activity_logs cascade;
 drop table if exists public.reminders cascade;
 drop table if exists public.events cascade;
@@ -209,6 +210,35 @@ create table public.reports (
 );
 
 create index idx_reports_user_date on public.reports (user_id, report_date desc);
+
+-- -----------------------------------------------------------------------------
+-- notes �?" personal diary entries, owner-only
+-- -----------------------------------------------------------------------------
+create table public.notes (
+  id          uuid primary key default gen_random_uuid(),
+  user_id     uuid not null references auth.users (id) on delete cascade,
+  title       text not null default 'Untitled',
+  content     text not null default '',
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now()
+);
+
+create index idx_notes_user_updated on public.notes (user_id, updated_at desc);
+
+alter table public.notes enable row level security;
+
+create policy "notes owner select" on public.notes
+  for select using (auth.uid() = user_id);
+create policy "notes owner insert" on public.notes
+  for insert with check (auth.uid() = user_id);
+create policy "notes owner update" on public.notes
+  for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "notes owner delete" on public.notes
+  for delete using (auth.uid() = user_id);
+
+create trigger trg_notes_updated_at
+  before update on public.notes
+  for each row execute function public.set_updated_at();
 create trigger trg_reports_updated_at
   before update on public.reports
   for each row execute function public.set_updated_at();

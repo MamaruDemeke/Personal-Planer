@@ -11,12 +11,18 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import Textarea from '@/components/ui/Textarea.vue'
+import RichTextEditor from '@/components/common/RichTextEditor.vue'
 import { useReportsStore } from '@/stores/reports'
 import { useToast } from '@/composables/useToast'
 import { useAccessGate } from '@/composables/useAccessGate'
 import { formatDate, formatRelative } from '@/lib/format'
 
 const reports = useReportsStore()
+
+function stripTags(html) {
+  if (!html) return ''
+  return String(html).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
+}
 const toast = useToast()
 const { ensureWrite } = useAccessGate()
 
@@ -147,7 +153,7 @@ const isEmptyReport = computed(() => SECTIONS.value.every(({ key }) => !form[key
 function exportMarkdown() {
   const lines = [`# ${PERIODS.find((p) => p.value === period.value)?.label} Work Report — ${formatDate(form.reportDate)}`, '']
   for (const { key, label } of SECTIONS.value) {
-    lines.push(`## ${label}`, form[key]?.trim() || '—', '')
+    lines.push(`## ${label}`, stripTags(form[key]) || '—', '')
   }
   const blob = new Blob([lines.join('\n')], { type: 'text/markdown;charset=utf-8' })
   const url = URL.createObjectURL(blob)
@@ -161,8 +167,8 @@ function exportMarkdown() {
 
 function printReport() {
   const rows = SECTIONS.value.map(({ key, label }) => {
-    const value = (form[key]?.trim() || '—').replace(/[<>&]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' })[c])
-    return `<section><h2>${label}</h2><p>${value.replace(/\n/g, '<br>')}</p></section>`
+    const value = form[key]?.trim() || '—'
+    return `<section><h2>${label}</h2><div>${value}</div></section>`
   }).join('')
   const html = `<!doctype html><html><head><meta charset="utf-8"><title>Daily report ${form.reportDate}</title>
     <style>body{font-family:system-ui,Segoe UI,Arial,sans-serif;max-width:720px;margin:40px auto;padding:0 16px;color:#111}
@@ -183,7 +189,7 @@ function printReport() {
 
 <template>
   <div class="space-y-4 sm:space-y-6">
-    <PageHeader :title="`${PERIODS.find((p) => p.value === period).label} Reports`" description="Record what you did, blocked on, and plan for the next period.">
+    <PageHeader :title="`${(PERIODS.find((p) => p.value === period) || PERIODS[0]).label} Reports`" description="Record what you did, blocked on, and plan for the next period.">
       <template #actions>
         <div class="flex items-center gap-1 rounded-md border p-0.5">
           <Button
@@ -245,10 +251,9 @@ function printReport() {
           <div v-else class="space-y-4">
             <div v-for="section in SECTIONS" :key="section.key" class="space-y-1.5">
               <Label :for="`report-${section.key}`">{{ section.label }}</Label>
-              <Textarea
-                :id="`report-${section.key}`"
+              <RichTextEditor
                 v-model="form[section.key]"
-                :rows="3"
+                :rows="4"
                 :placeholder="`Write the ${section.label.toLowerCase()} here...`"
               />
             </div>

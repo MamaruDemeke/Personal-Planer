@@ -273,7 +273,7 @@ const fields = computed(() => [
     help: 'Which planning horizon does this task belong to?',
     options: TASK_PLANS.map((p) => ({ ...p, icon: null })),
   },
-  { name: 'description', label: 'Description', type: 'textarea', span: 2, placeholder: 'What needs to be done?' },
+  { name: 'description', label: 'Description', type: 'richtext', span: 2, placeholder: 'What needs to be done?' },
   { name: 'categoryId', label: 'Category', type: 'select', options: categoryOptions.value },
   { name: 'priority', label: 'Priority', type: 'select', required: true, default: 'medium', options: TASK_PRIORITIES },
   { name: 'status', label: 'Status', type: 'select', default: 'not_started', options: TASK_STATUSES },
