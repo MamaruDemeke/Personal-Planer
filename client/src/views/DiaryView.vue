@@ -14,6 +14,7 @@ import { Label } from '@/components/ui/label'
 import { useNotesStore } from '@/stores/notes'
 import { useToast } from '@/composables/useToast'
 import { useAccessGate } from '@/composables/useAccessGate'
+import { useI18n } from '@/lib/i18n'
 import { formatDate, formatRelative } from '@/lib/format'
 
 const notes = useNotesStore()
@@ -24,6 +25,7 @@ function stripTags(html) {
 }
 const toast = useToast()
 const { ensureWrite } = useAccessGate()
+const { t } = useI18n()
 
 const search = ref('')
 const selectedId = ref(null)
@@ -104,11 +106,11 @@ async function remove() {
 
 <template>
   <div class="space-y-4 sm:space-y-6">
-    <PageHeader title="Personal Diary" description="Your private notes — write, save, and revisit anytime.">
+    <PageHeader :title="t('page.diary.title')" :description="t('page.diary.desc')">
       <template #actions>
-        <Button @click="newNote">
-          <Plus class="h-4 w-4" /> New note
-        </Button>
+          <Button @click="newNote">
+            <Plus class="h-4 w-4" /> {{ t('diary.newNote') }}
+          </Button>
       </template>
     </PageHeader>
 
@@ -120,19 +122,19 @@ async function remove() {
         <CardContent class="space-y-3 pt-4">
           <div class="relative">
             <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input v-model="search" placeholder="Search notes..." class="pl-9" />
+            <Input v-model="search" :placeholder="t('diary.searchNotes')" class="pl-9" />
           </div>
 
           <EmptyState
             v-if="!filtered.length"
-            title="No notes yet"
-            description="Create your first note."
+            :title="t('diary.noNotes')"
+            :description="t('diary.createFirst')"
             class="py-6"
           >
             <template #icon><BookOpen class="h-5 w-5" /></template>
             <template #action>
               <Button size="sm" @click="newNote">
-                <Plus class="h-4 w-4" /> New note
+                <Plus class="h-4 w-4" /> {{ t('diary.newNote') }}
               </Button>
             </template>
           </EmptyState>
@@ -145,7 +147,7 @@ async function remove() {
                 :class="selectedId === note.id && 'text-primary'"
                 @click="select(note)"
               >
-                <span class="truncate text-sm font-medium">{{ note.title || 'Untitled' }}</span>
+                <span class="truncate text-sm font-medium">{{ note.title || t('diary.untitled') }}</span>
                 <span class="shrink-0 text-[11px] text-muted-foreground">{{ formatDate(note.createdAt) }}</span>
               </button>
             </li>
@@ -157,22 +159,22 @@ async function remove() {
       <Card class="lg:col-span-2">
         <CardContent class="space-y-4 pt-4">
           <div class="space-y-1.5">
-            <Label for="note-title">Title</Label>
-            <Input id="note-title" v-model="draft.title" placeholder="Note title" />
+            <Label for="note-title">{{ t('diary.title') }}</Label>
+            <Input id="note-title" v-model="draft.title" :placeholder="t('diary.noteTitle')" />
           </div>
           <div class="space-y-1.5">
-            <Label for="note-content">Content</Label>
-            <RichTextEditor v-model="draft.content" placeholder="Write your note here..." :rows="16" />
+            <Label for="note-content">{{ t('diary.content') }}</Label>
+            <RichTextEditor v-model="draft.content" :placeholder="t('diary.writeHere')" :rows="16" />
           </div>
           <div class="flex items-center gap-2">
             <Button :disabled="saving" @click="save">
-              <Save class="h-4 w-4" /> {{ saving ? 'Saving...' : 'Save' }}
+              <Save class="h-4 w-4" /> {{ saving ? t('common.saving') : t('common.save') }}
             </Button>
             <Button v-if="selectedId" variant="outline" class="text-destructive" @click="remove">
-              <Trash2 class="h-4 w-4" /> Delete
+              <Trash2 class="h-4 w-4" /> {{ t('common.delete') }}
             </Button>
             <span v-if="selectedId" class="ml-auto text-xs text-muted-foreground">
-              Created {{ formatDate(notes.items.find((n) => n.id === selectedId)?.createdAt) }} · Updated {{ formatRelative(notes.items.find((n) => n.id === selectedId)?.updatedAt) }}
+              {{ t('diary.created') }} {{ formatDate(notes.items.find((n) => n.id === selectedId)?.createdAt) }} · {{ t('diary.updated') }} {{ formatRelative(notes.items.find((n) => n.id === selectedId)?.updatedAt) }}
             </span>
           </div>
         </CardContent>

@@ -101,6 +101,12 @@ const routes = [
         meta: { title: 'Personal Diary', requiresAuth: true },
       },
       {
+        path: 'ethiopian-calendar',
+        name: 'ethiopian-calendar',
+        component: () => import('@/views/EthiopianCalendarView.vue'),
+        meta: { title: 'Ethiopian Calendar', requiresAuth: true },
+      },
+      {
         path: 'admin',
         name: 'admin',
         component: () => import('@/views/AdminView.vue'),

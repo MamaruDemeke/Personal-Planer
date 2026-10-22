@@ -15,6 +15,7 @@ import RichTextEditor from '@/components/common/RichTextEditor.vue'
 import { useReportsStore } from '@/stores/reports'
 import { useToast } from '@/composables/useToast'
 import { useAccessGate } from '@/composables/useAccessGate'
+import { useI18n } from '@/lib/i18n'
 import { formatDate, formatRelative } from '@/lib/format'
 
 const reports = useReportsStore()
@@ -25,6 +26,7 @@ function stripTags(html) {
 }
 const toast = useToast()
 const { ensureWrite } = useAccessGate()
+const { t } = useI18n()
 
 const PERIODS = [
   { value: 'daily', label: 'Daily' },
@@ -205,20 +207,20 @@ function printReport() {
         <Button variant="outline" :disabled="suggesting" @click="suggest">
           <Loader2 v-if="suggesting" class="h-4 w-4 animate-spin" />
           <Sparkles v-else class="h-4 w-4" />
-          Suggest from tasks
+          {{ t('reports.suggest') }}
         </Button>
         <Button variant="outline" @click="exportMarkdown">
           <Download class="h-4 w-4" />
-          Export
+          {{ t('common.export') }}
         </Button>
         <Button variant="outline" @click="printReport">
           <Printer class="h-4 w-4" />
-          Print
+          {{ t('common.print') }}
         </Button>
         <Button :disabled="saving" @click="save">
           <Loader2 v-if="saving" class="h-4 w-4 animate-spin" />
           <Save v-else class="h-4 w-4" />
-          Save
+          {{ t('common.save') }}
         </Button>
       </template>
     </PageHeader>
@@ -228,7 +230,7 @@ function printReport() {
         <CardContent class="space-y-4 pt-4">
           <div class="grid gap-4 sm:grid-cols-2">
             <div class="space-y-1.5">
-              <Label for="report-date">Report date</Label>
+              <Label for="report-date">{{ t('reports.reportDate') }}</Label>
               <Input id="report-date" v-model="form.reportDate" type="date" class="w-full sm:w-56" />
             </div>
             <div class="flex items-end">
@@ -239,7 +241,7 @@ function printReport() {
                 @click="remove"
               >
                 <Trash2 class="h-4 w-4" />
-                Delete this report
+                {{ t('reports.deleteReport') }}
               </Button>
             </div>
           </div>
@@ -263,14 +265,14 @@ function printReport() {
 
       <Card>
         <CardHeader>
-          <CardTitle class="text-base">Recent reports</CardTitle>
+          <CardTitle class="text-base">{{ t('reports.recentReports') }}</CardTitle>
         </CardHeader>
         <CardContent class="pt-0">
           <LoadingState v-if="reports.loading && !reports.loaded" :rows="4" />
           <EmptyState
             v-else-if="!reports.items.length"
-            title="No reports yet"
-            description="Saved reports will appear here."
+            :title="t('reports.noReports')"
+            :description="t('reports.savedAppear')"
             class="py-8"
           >
             <template #icon><FileText class="h-5 w-5" /></template>

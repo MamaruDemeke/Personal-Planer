@@ -28,10 +28,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { useAccessStore } from '@/stores/access'
 import { useDashboardStore } from '@/stores/dashboard'
+import { useI18n } from '@/lib/i18n'
 
 const router = useRouter()
 const access = useAccessStore()
 const dashboard = useDashboardStore()
+const { t } = useI18n()
 
 const locked = computed(() => access.isLocked)
 
@@ -67,10 +69,10 @@ function goToPayment() {
 
 <template>
   <div class="space-y-3">
-    <PageHeader title="Dashboard" description="Your work at a glance.">
+    <PageHeader :title="t('page.dashboard.title')" :description="t('page.dashboard.desc')">
       <template #actions>
         <Button v-if="!locked" size="sm" @click="newTask">
-          <Plus class="h-4 w-4" /> New task
+          <Plus class="h-4 w-4" /> {{ t('common.newTask') }}
         </Button>
       </template>
     </PageHeader>
@@ -83,7 +85,7 @@ function goToPayment() {
           <span class="text-xs text-muted-foreground">{{ lockInfo.message }}</span>
         </div>
         <Button size="sm" @click="goToPayment">
-          <Receipt class="h-4 w-4" /> Pay
+          <Receipt class="h-4 w-4" /> {{ t('common.pay') }}
         </Button>
       </CardContent>
     </Card>
@@ -100,11 +102,11 @@ function goToPayment() {
     <template v-else-if="s">
       <!-- Summary cards -->
       <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
-        <StatCard label="Total" :value="s.total" tone="info" :icon="ListTodo" :hint="`${s.notStarted} todo`" />
-        <StatCard label="Completed" :value="s.completed" tone="success" :icon="CheckCircle2" :hint="`${s.completionRate}%`" />
-        <StatCard label="Pending" :value="s.pending" tone="warning" :icon="Clock" :hint="`${s.inProgress} active`" />
-        <StatCard label="Overdue" :value="s.overdue" tone="destructive" :icon="AlertTriangle" :hint="s.overdue ? 'attention' : 'none'" />
-        <StatCard label="Progress" :value="`${s.completionRate}%`" :progress="s.completionRate" tone="primary" :icon="TrendingUp" :hint="`${s.completed}/${s.total}`" />
+        <StatCard :label="t('dash.total')" :value="s.total" tone="info" :icon="ListTodo" :hint="`${s.notStarted} ${t('dash.todo')}`" />
+        <StatCard :label="t('dash.completed')" :value="s.completed" tone="success" :icon="CheckCircle2" :hint="`${s.completionRate}%`" />
+        <StatCard :label="t('dash.pending')" :value="s.pending" tone="warning" :icon="Clock" :hint="`${s.inProgress} ${t('dash.active')}`" />
+        <StatCard :label="t('dash.overdue')" :value="s.overdue" tone="destructive" :icon="AlertTriangle" :hint="s.overdue ? t('dash.attention') : t('dash.none')" />
+        <StatCard :label="t('dash.progress')" :value="`${s.completionRate}%`" :progress="s.completionRate" tone="primary" :icon="TrendingUp" :hint="`${s.completed}/${s.total}`" />
       </div>
 
       <!-- Overall progress -->
@@ -113,8 +115,8 @@ function goToPayment() {
           <Target class="h-5 w-5 shrink-0 text-primary" />
           <div class="min-w-0 flex-1">
             <div class="mb-1 flex items-center justify-between text-xs">
-              <span class="font-medium">Overall completion</span>
-              <span class="text-muted-foreground">avg {{ s.avgProgress }}%</span>
+              <span class="font-medium">{{ t('dash.overallCompletion') }}</span>
+              <span class="text-muted-foreground">{{ t('dash.avg') }} {{ s.avgProgress }}%</span>
             </div>
             <Progress :model-value="s.completionRate" class="h-2" :indicator-style="{ backgroundColor: '#0d9488' }" />
           </div>
@@ -127,7 +129,7 @@ function goToPayment() {
         <Card>
           <CardHeader class="p-3 pb-1">
             <CardTitle class="flex items-center gap-1.5 text-sm">
-              <ListChecks class="h-3.5 w-3.5 text-info" /> By status
+              <ListChecks class="h-3.5 w-3.5 text-info" /> {{ t('dash.byStatus') }}
             </CardTitle>
           </CardHeader>
           <CardContent class="p-3 pt-0">
@@ -137,7 +139,7 @@ function goToPayment() {
         <Card>
           <CardHeader class="p-3 pb-1">
             <CardTitle class="flex items-center gap-1.5 text-sm">
-              <Flame class="h-3.5 w-3.5 text-warning" /> By priority
+              <Flame class="h-3.5 w-3.5 text-warning" /> {{ t('dash.byPriority') }}
             </CardTitle>
           </CardHeader>
           <CardContent class="p-3 pt-0">
@@ -151,11 +153,11 @@ function goToPayment() {
         <Card>
           <CardHeader class="p-3 pb-1">
             <CardTitle class="flex items-center gap-1.5 text-sm">
-              <TrendingUp class="h-3.5 w-3.5 text-primary" /> Upcoming
+              <TrendingUp class="h-3.5 w-3.5 text-primary" /> {{ t('dash.upcoming') }}
             </CardTitle>
           </CardHeader>
           <CardContent class="space-y-1 p-3 pt-0">
-            <div v-if="!(s.upcoming?.length)" class="py-3 text-center text-xs text-muted-foreground">Nothing due soon.</div>
+            <div v-if="!(s.upcoming?.length)" class="py-3 text-center text-xs text-muted-foreground">{{ t('dash.nothingDue') }}</div>
             <div
               v-for="t in (s.upcoming ?? []).slice(0, 4)"
               :key="t.id"
@@ -169,11 +171,11 @@ function goToPayment() {
         <Card>
           <CardHeader class="p-3 pb-1">
             <CardTitle class="flex items-center gap-1.5 text-sm">
-              <AlertTriangle class="h-3.5 w-3.5 text-destructive" /> Overdue
+              <AlertTriangle class="h-3.5 w-3.5 text-destructive" /> {{ t('dash.overdueList') }}
             </CardTitle>
           </CardHeader>
           <CardContent class="space-y-1 p-3 pt-0">
-            <div v-if="!(s.overdueTasks?.length)" class="py-3 text-center text-xs text-muted-foreground">No overdue tasks.</div>
+            <div v-if="!(s.overdueTasks?.length)" class="py-3 text-center text-xs text-muted-foreground">{{ t('dash.noOverdue') }}</div>
             <div
               v-for="t in (s.overdueTasks ?? []).slice(0, 4)"
               :key="t.id"

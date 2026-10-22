@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { X, HardHat } from 'lucide-vue-next'
 import { buildNavSections } from '@/lib/navigation'
 import { useAccessStore } from '@/stores/access'
+import { useI18n } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 
 defineProps({
@@ -11,6 +12,7 @@ defineProps({
 const emit = defineEmits(['close'])
 
 const access = useAccessStore()
+const { t } = useI18n()
 const sections = computed(() => buildNavSections({ isAdmin: access.isAdmin, locked: access.isLocked }))
 </script>
 
@@ -45,7 +47,7 @@ const sections = computed(() => buildNavSections({ isAdmin: access.isAdmin, lock
       >
         <HardHat class="h-5 w-5" />
       </span>
-      <span class="text-lg font-bold tracking-tight text-slate-900">Worker Planner</span>
+      <span class="text-lg font-bold tracking-tight text-slate-900">{{ t('app.title') }}</span>
       <button
         type="button"
         class="ml-auto rounded-md p-1.5 text-slate-700 transition-colors hover:bg-blue-200/60 lg:hidden"
@@ -59,7 +61,7 @@ const sections = computed(() => buildNavSections({ isAdmin: access.isAdmin, lock
     <nav class="flex-1 space-y-5 overflow-y-auto px-3 py-4">
       <div v-for="section in sections" :key="section.title" class="space-y-1">
         <p class="px-3 text-xs font-semibold uppercase tracking-wider text-blue-700">
-          {{ section.title }}
+          {{ t(section.title) }}
         </p>
         <RouterLink
           v-for="item in section.items"
@@ -70,7 +72,7 @@ const sections = computed(() => buildNavSections({ isAdmin: access.isAdmin, lock
           @click="emit('close')"
         >
           <component :is="item.icon" class="h-4 w-4 shrink-0" />
-          {{ item.label }}
+          {{ t(item.label) }}
         </RouterLink>
       </div>
     </nav>

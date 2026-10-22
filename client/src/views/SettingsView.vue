@@ -27,6 +27,7 @@ import { useCategoriesStore } from '@/stores/categories'
 import { useTheme } from '@/composables/useTheme'
 import { useReminders } from '@/composables/useReminders'
 import { useToast } from '@/composables/useToast'
+import { useI18n } from '@/lib/i18n'
 import { useAccessGate } from '@/composables/useAccessGate'
 
 const router = useRouter()
@@ -34,6 +35,7 @@ const auth = useAuthStore()
 const categories = useCategoriesStore()
 const reminders = useReminders()
 const toast = useToast()
+const { t } = useI18n()
 const { ensureWrite } = useAccessGate()
 const { isDark, toggleTheme } = useTheme()
 
@@ -134,22 +136,22 @@ async function signOut() {
 
 <template>
   <div class="space-y-4 sm:space-y-6">
-    <PageHeader title="Settings" description="Manage your profile, categories and preferences." />
+    <PageHeader :title="t('page.settings.title')" :description="t('page.settings.desc')" />
 
     <!-- Profile -->
     <Card>
       <CardHeader>
-        <CardTitle class="text-base">Profile</CardTitle>
+          <CardTitle class="text-base">{{ t('settings.profile') }}</CardTitle>
         <CardDescription>Your name and timezone.</CardDescription>
       </CardHeader>
       <CardContent class="space-y-4 pt-0">
         <div class="grid gap-4 sm:grid-cols-2">
           <div class="space-y-1.5">
-            <Label for="profile-name">Full name</Label>
+             <Label for="profile-name">{{ t('settings.fullName') }}</Label>
             <Input id="profile-name" v-model="profile.fullName" placeholder="Your name" />
           </div>
           <div class="space-y-1.5">
-            <Label for="profile-tz">Timezone</Label>
+             <Label for="profile-tz">{{ t('settings.timezone') }}</Label>
             <Input id="profile-tz" v-model="profile.timezone" placeholder="e.g. Africa/Addis_Ababa" />
           </div>
         </div>
@@ -164,7 +166,7 @@ async function signOut() {
     <!-- Appearance -->
     <Card>
       <CardHeader>
-        <CardTitle class="text-base">Appearance</CardTitle>
+          <CardTitle class="text-base">{{ t('settings.appearance') }}</CardTitle>
         <CardDescription>Switch between light and dark themes.</CardDescription>
       </CardHeader>
       <CardContent class="pt-0">
@@ -179,7 +181,7 @@ async function signOut() {
     <!-- Notifications -->
     <Card>
       <CardHeader>
-        <CardTitle class="text-base">Reminders &amp; notifications</CardTitle>
+          <CardTitle class="text-base">{{ t('settings.reminders') }}</CardTitle>
         <CardDescription>Get alerted about due and overdue tasks.</CardDescription>
       </CardHeader>
       <CardContent class="flex flex-wrap items-center gap-3 pt-0">
@@ -204,7 +206,7 @@ async function signOut() {
     <Card>
       <CardHeader class="flex-row items-center justify-between space-y-0">
         <div class="space-y-1">
-          <CardTitle class="text-base">Categories</CardTitle>
+          <CardTitle class="text-base">{{ t('settings.categories') }}</CardTitle>
           <CardDescription>Group tasks by type of work.</CardDescription>
         </div>
         <Button variant="outline" size="sm" @click="openCreateCategory">
@@ -238,7 +240,7 @@ async function signOut() {
     <!-- Account -->
     <Card>
       <CardHeader>
-        <CardTitle class="text-base">Account</CardTitle>
+          <CardTitle class="text-base">{{ t('settings.account') }}</CardTitle>
         <CardDescription>{{ auth.user?.email ?? 'Not signed in' }}</CardDescription>
       </CardHeader>
       <CardContent class="pt-0">
@@ -251,8 +253,8 @@ async function signOut() {
 
     <ResourceFormDialog
       v-model:open="dialogOpen"
-      :title="editing ? 'Edit category' : 'New category'"
-      description="Categories help you group and colour-code your tasks."
+      :title="editing ? t('settings.editCategory') : t('settings.newCategory')"
+      :description="t('settings.categoryHelp')"
       :fields="categoryFields"
       :schema="categorySchema"
       :initial="editing"

@@ -19,6 +19,7 @@ import { Input } from '@/components/ui/input'
 import Select from '@/components/ui/Select.vue'
 import { taskSchema } from '@/schemas'
 import { TASK_PRIORITIES, TASK_STATUSES, TASK_PLANS, TASK_RECURRENCES } from '@/lib/constants'
+import { useI18n } from '@/lib/i18n'
 import { parseQuickAdd } from '@/lib/quickAdd'
 import { useTasksStore } from '@/stores/tasks'
 import { useCategoriesStore } from '@/stores/categories'
@@ -33,6 +34,7 @@ const categoriesStore = useCategoriesStore()
 const dashboard = useDashboardStore()
 const toast = useToast()
 const { ensureWrite } = useAccessGate()
+const { t } = useI18n()
 
 const search = ref(typeof route.query.search === 'string' ? route.query.search : '')
 
@@ -254,7 +256,7 @@ function toggleComplete(task) {
 
 <template>
   <div class="space-y-4 sm:space-y-6">
-    <PageHeader title="My Tasks" description="Create, organise and track every task.">
+    <PageHeader :title="t('page.tasks.title')" :description="t('page.tasks.desc')">
       <template #actions>
         <div class="flex items-center gap-1 rounded-md border p-0.5">
           <Button :variant="viewMode === 'list' ? 'default' : 'ghost'" size="sm" @click="viewMode = 'list'">List</Button>
@@ -273,7 +275,7 @@ function toggleComplete(task) {
           <Plus class="h-4 w-4 text-muted-foreground" />
           <Input
             v-model="quickText"
-            placeholder='Quick add: "Buy milk tomorrow p1 every week"'
+            :placeholder="t('tasks.quickAddPlaceholder')"
             @keydown.enter.prevent="quickAdd"
           />
           <Button :disabled="quickAdding || !quickText.trim()" @click="quickAdd">
@@ -294,10 +296,10 @@ function toggleComplete(task) {
       <CardContent class="grid gap-2.5 pt-3.5 sm:pt-4 lg:grid-cols-12">
         <div class="relative lg:col-span-4">
           <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input v-model="search" placeholder="Search tasks..." class="pl-9" />
+            <Input v-model="search" :placeholder="t('common.search') + '...'" class="pl-9" />
         </div>
         <Select v-model="statusFilter" class="lg:col-span-2" aria-label="Filter by status">
-          <option value="">All statuses</option>
+          <option value="">{{ t('tasks.allStatuses') }}</option>
           <option value="active">Active</option>
           <option value="overdue">Overdue</option>
           <option value="not_started">Not started</option>
@@ -305,11 +307,11 @@ function toggleComplete(task) {
           <option value="completed">Completed</option>
         </Select>
         <Select v-model="priorityFilter" class="lg:col-span-2" aria-label="Filter by priority">
-          <option value="">All priorities</option>
+          <option value="">{{ t('tasks.allPriorities') }}</option>
           <option v-for="p in TASK_PRIORITIES" :key="p.value" :value="p.value">{{ p.label }}</option>
         </Select>
         <Select v-model="categoryFilter" class="lg:col-span-2" aria-label="Filter by category">
-          <option value="">All categories</option>
+          <option value="">{{ t('tasks.allCategories') }}</option>
           <option v-for="c in categoriesStore.items" :key="c.id" :value="c.id">{{ c.name }}</option>
         </Select>
         <div class="flex gap-2 lg:col-span-2">
@@ -349,15 +351,15 @@ function toggleComplete(task) {
 
     <ErrorState
       v-else-if="tasksStore.error && !tasksStore.items.length"
-      title="Could not load tasks"
+      :title="t('tasks.couldNotLoad')"
       :description="tasksStore.error"
       @retry="tasksStore.load(params, { force: true })"
     />
 
     <EmptyState
       v-else-if="!tasksStore.items.length"
-      title="No tasks found"
-      description="Create your first task to get started."
+      :title="t('tasks.noTasks')"
+      :description="t('tasks.createFirst')"
     >
       <template #icon><ListTodo class="h-5 w-5" /></template>
       <template #action>
@@ -420,19 +422,19 @@ function toggleComplete(task) {
 
     <ResourceFormDialog
       v-model:open="dialogOpen"
-      :title="editing ? 'Edit task' : 'New task'"
-      :description="editing ? 'Update this task.' : 'Add a task with a category, priority, dates and progress.'"
+      :title="editing ? t('tasks.editTask') : t('tasks.newTask')"
+      :description="editing ? t('tasks.updateTask') : t('tasks.addTaskDesc')"
       :fields="fields"
       :schema="taskSchema"
       :initial="editing"
-      :submit-label="editing ? 'Save changes' : 'Create task'"
+      :submit-label="editing ? t('tasks.saveChanges') : t('tasks.createTask')"
       @submit="submit"
     />
 
     <ConfirmDeleteDialog
       v-model:open="deleteOpen"
-      title="Delete task"
-      :description="`Delete “${deleting?.title ?? ''}”? This cannot be undone.`"
+      :title="t('tasks.deleteTask')"
+      :description="t('tasks.deleteConfirm', { title: deleting?.title ?? '' })"
       :loading="deleteLoading"
       @confirm="confirmDelete"
     />

@@ -48,6 +48,7 @@ import { useCategoriesStore } from '@/stores/categories'
 import { useDashboardStore } from '@/stores/dashboard'
 import { useToast } from '@/composables/useToast'
 import { useAccessGate } from '@/composables/useAccessGate'
+import { useI18n } from '@/lib/i18n'
 import { taskSchema } from '@/schemas'
 import { TASK_PLANS, TASK_PRIORITIES, TASK_STATUSES, TASK_RECURRENCES } from '@/lib/constants'
 
@@ -58,6 +59,7 @@ const categories = useCategoriesStore()
 const dashboard = useDashboardStore()
 const toast = useToast()
 const { ensureWrite } = useAccessGate()
+const { t } = useI18n()
 
 const PERIOD_LABELS = { daily: 'Daily', weekly: 'Weekly', monthly: 'Monthly', yearly: 'Yearly' }
 const PERIOD_DESCRIPTIONS = {
@@ -424,21 +426,21 @@ function resetFilters() {
           <Button variant="outline" size="icon" aria-label="Previous" @click="shift(-1)">
             <ChevronLeft class="h-4 w-4" />
           </Button>
-          <Button variant="outline" @click="goToday">Today</Button>
+          <Button variant="outline" @click="goToday">{{ t('common.today') }}</Button>
           <Button variant="outline" size="icon" aria-label="Next" @click="shift(1)">
             <ChevronRight class="h-4 w-4" />
           </Button>
           <Button variant="outline" @click="rollover" :disabled="rolling">
             <RefreshCw class="h-4 w-4" :class="rolling && 'animate-spin'" />
-            <span class="hidden sm:inline">Roll over unfinished</span>
+            <span class="hidden sm:inline">{{ t('plan.rollover') }}</span>
           </Button>
           <Button variant="outline" @click="exportPlan">
             <Copy class="h-4 w-4" />
-            <span class="hidden sm:inline">Export</span>
+            <span class="hidden sm:inline">{{ t('common.export') }}</span>
           </Button>
           <Button @click="openCreate()">
             <Plus class="h-4 w-4" />
-            <span class="hidden sm:inline">Add task</span>
+            <span class="hidden sm:inline">{{ t('common.newTask') }}</span>
           </Button>
         </div>
       </template>
@@ -448,7 +450,7 @@ function resetFilters() {
 
     <ErrorState
       v-else-if="tasks.error && !tasks.items.length"
-      title="Could not load tasks"
+      :title="t('tasks.couldNotLoad')"
       :description="tasks.error"
       @retry="tasks.load({}, { force: true })"
     />
@@ -604,11 +606,11 @@ function resetFilters() {
         <h2 class="text-sm font-semibold text-muted-foreground">
           Tasks this {{ period }} ({{ filteredPeriodTasks.length }})
         </h2>
-        <EmptyState
-          v-if="!filteredPeriodTasks.length"
-          title="Nothing scheduled"
-          description="No tasks fall within this period."
-        >
+          <EmptyState
+            v-if="!filteredPeriodTasks.length"
+            :title="t('plan.nothingScheduled')"
+            :description="t('plan.noTasksPeriod')"
+          >
           <template #icon><CalendarDays class="h-5 w-5" /></template>
           <template #action>
             <Button @click="openCreate()">
@@ -645,12 +647,12 @@ function resetFilters() {
 
     <ResourceFormDialog
       v-model:open="dialogOpen"
-      :title="editing ? 'Edit task' : 'New task'"
-      :description="editing ? 'Update this task.' : 'Add a task to this plan.'"
+      :title="editing ? t('tasks.editTask') : t('tasks.newTask')"
+      :description="editing ? t('tasks.updateTask') : t('plan.addTaskPlan')"
       :fields="fields"
       :schema="taskSchema"
       :initial="editing || createInitial"
-      :submit-label="editing ? 'Save changes' : 'Create task'"
+      :submit-label="editing ? t('tasks.saveChanges') : t('tasks.createTask')"
       @submit="submit"
     />
   </div>

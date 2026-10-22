@@ -22,43 +22,49 @@ import {
 export function buildNavSections({ isAdmin = false, locked = false } = {}) {
   const sections = [
     {
-      title: 'Overview',
+      title: 'section.overview',
       items: [
-        { label: 'Dashboard', to: { name: 'dashboard' }, icon: LayoutDashboard },
-        { label: 'My Tasks', to: { name: 'tasks' }, icon: ListTodo },
+        { label: 'nav.dashboard', to: { name: 'dashboard' }, icon: LayoutDashboard },
+        { label: 'nav.tasks', to: { name: 'tasks' }, icon: ListTodo },
       ],
     },
     {
-      title: 'Planning',
+      title: 'section.planning',
       items: [
-        { label: 'Daily', to: { name: 'plan-daily' }, icon: CalendarDays },
-        { label: 'Weekly', to: { name: 'plan-weekly' }, icon: CalendarRange },
-        { label: 'Monthly', to: { name: 'plan-monthly' }, icon: CalendarClock },
-        { label: 'Yearly', to: { name: 'plan-yearly' }, icon: Calendar },
+        { label: 'nav.daily', to: { name: 'plan-daily' }, icon: CalendarDays },
+        { label: 'nav.weekly', to: { name: 'plan-weekly' }, icon: CalendarRange },
+        { label: 'nav.monthly', to: { name: 'plan-monthly' }, icon: CalendarClock },
+        { label: 'nav.yearly', to: { name: 'plan-yearly' }, icon: Calendar },
       ],
     },
     {
-      title: 'Work',
+      title: 'section.work',
       items: [
-        { label: 'Progress', to: { name: 'progress' }, icon: TrendingUp },
-        { label: 'Reports', to: { name: 'reports' }, icon: FileText },
-        { label: 'Personal Diary', to: { name: 'diary' }, icon: BookOpen },
-        { label: 'Settings', to: { name: 'settings' }, icon: Settings },
+        { label: 'nav.progress', to: { name: 'progress' }, icon: TrendingUp },
+        { label: 'nav.reports', to: { name: 'reports' }, icon: FileText },
+        { label: 'nav.diary', to: { name: 'diary' }, icon: BookOpen },
+        { label: 'nav.settings', to: { name: 'settings' }, icon: Settings },
+      ],
+    },
+    {
+      title: 'section.culture',
+      items: [
+        { label: 'nav.ethiopianCalendar', to: { name: 'ethiopian-calendar' }, icon: Calendar },
       ],
     },
   ]
 
   if (locked && !isAdmin) {
     sections.unshift({
-      title: 'Account',
-      items: [{ label: 'Verify payment', to: { name: 'access' }, icon: BadgeCheck }],
+      title: 'section.account',
+      items: [{ label: 'nav.access', to: { name: 'access' }, icon: BadgeCheck }],
     })
   }
 
   if (isAdmin) {
     sections.push({
-      title: 'Administration',
-      items: [{ label: 'User verification', to: { name: 'admin' }, icon: ShieldCheck }],
+      title: 'section.administration',
+      items: [{ label: 'nav.admin', to: { name: 'admin' }, icon: ShieldCheck }],
     })
   }
 

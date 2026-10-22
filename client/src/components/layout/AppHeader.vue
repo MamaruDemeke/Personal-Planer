@@ -3,6 +3,8 @@ import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { LogOut, Menu, Moon, Search, Sun } from 'lucide-vue-next'
 import { useTheme } from '@/composables/useTheme'
+import { useI18n, availableLocales } from '@/lib/i18n'
+import { gregorianToEthiopian, ETHIOPIAN_MONTHS_AMHARIC } from '@/lib/ethiopianCalendar'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/composables/useToast'
 import { Button } from '@/components/ui/button'
@@ -24,8 +26,14 @@ const router = useRouter()
 const auth = useAuthStore()
 const toast = useToast()
 const { isDark, toggleTheme } = useTheme()
+const { locale, setLocale, t } = useI18n()
 
 const search = ref('')
+
+const ethDate = computed(() => {
+  const e = gregorianToEthiopian(new Date())
+  return `${e.day} ${ETHIOPIAN_MONTHS_AMHARIC[e.month - 1]} ${e.year}`
+})
 
 const profileName = computed(() => auth.displayName)
 const profileEmail = computed(() => auth.user?.email ?? 'Not signed in')
@@ -61,13 +69,24 @@ async function onSignOut() {
       <Input
         v-model="search"
         type="search"
-        placeholder="Search tasks..."
+        :placeholder="t('header.search')"
         class="pl-9"
         aria-label="Search tasks"
       />
     </form>
 
     <div class="ml-auto flex items-center gap-1">
+      <select
+        v-model="locale"
+        class="h-8 rounded-md border bg-background px-2 text-xs"
+        aria-label="Language"
+        @change="setLocale(locale)"
+      >
+        <option v-for="l in availableLocales" :key="l.value" :value="l.value">{{ l.label }}</option>
+      </select>
+      <span class="hidden text-xs font-medium text-muted-foreground sm:inline">
+        {{ ethDate }}
+      </span>
       <NotificationBell v-if="auth.isAuthenticated" />
 
       <Button
