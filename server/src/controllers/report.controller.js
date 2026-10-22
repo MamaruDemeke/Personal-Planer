@@ -2,17 +2,26 @@ import { ApiError } from '../utils/ApiError.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { toCamel, toSnake } from '../utils/case.js'
 import { unwrap } from '../utils/db.js'
+import { rlsError, withRlsFallback } from '../utils/rls.js'
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/
 
 /** GET /api/reports?from=YYYY-MM-DD&to=YYYY-MM-DD&period=daily */
 export const listReports = asyncHandler(async (req, res) => {
   const { from, to, period } = req.query
-  let query = req.supabase.from('reports').select('*').order('report_date', { ascending: false })
-  if (from) query = query.gte('report_date', from)
-  if (to) query = query.lte('report_date', to)
-  if (period) query = query.eq('period', period)
-  const rows = unwrap(await query)
+  const rows = await withRlsFallback(
+    req,
+    async (client) => {
+      let query = client.from('reports').select('*').order('report_date', { ascending: false })
+      if (from) query = query.gte('report_date', from)
+      if (to) query = query.lte('report_date', to)
+      if (period) query = query.eq('period', period)
+      return unwrap(await query)
+    },
+    (error) => {
+      throw rlsError(error)
+    },
+  )
   res.json({ data: (rows ?? []).map(toCamel) })
 })
 
@@ -21,30 +30,57 @@ export const getReportByDate = asyncHandler(async (req, res) => {
   const { date } = req.params
   if (!DATE_RE.test(date)) throw ApiError.badRequest('Use the format YYYY-MM-DD')
   const period = (req.query.period ?? 'daily').toString()
-  const row = unwrap(
-    await req.supabase.from('reports').select('*').eq('report_date', date).eq('period', period).maybeSingle(),
+  const row = await withRlsFallback(
+    req,
+    (client) =>
+      client
+        .from('reports')
+        .select('*')
+        .eq('report_date', date)
+        .eq('period', period)
+        .maybeSingle()
+        .then(unwrap),
+    (error) => {
+      throw rlsError(error)
+    },
   )
   res.json({ data: row ? toCamel(row) : null })
 })
 
 /** GET /api/reports/:id */
 export const getReport = asyncHandler(async (req, res) => {
-  const row = unwrap(
-    await req.supabase.from('reports').select('*').eq('id', req.params.id).maybeSingle(),
+  const row = await withRlsFallback(
+    req,
+    (client) =>
+      client
+        .from('reports')
+        .select('*')
+        .eq('id', req.params.id)
+        .maybeSingle()
+        .then(unwrap),
+    (error) => {
+      throw rlsError(error)
+    },
   )
   if (!row) throw ApiError.notFound('Report not found')
   res.json({ data: toCamel(row) })
 })
 
-/** POST /api/reports — upsert by (user_id, report_date) */
+/** POST /api/reports — upsert by (user_id, report_date, period) */
 export const createReport = asyncHandler(async (req, res) => {
   const body = { ...toSnake(req.body), user_id: req.user.id }
-  const row = unwrap(
-    await req.supabase
-      .from('reports')
-      .upsert(body, { onConflict: 'user_id,report_date,period' })
-      .select()
-      .single(),
+  const row = await withRlsFallback(
+    req,
+    (client) =>
+      client
+        .from('reports')
+        .upsert(body, { onConflict: 'user_id,report_date,period' })
+        .select()
+        .single()
+        .then(unwrap),
+    (error) => {
+      throw rlsError(error)
+    },
   )
   res.status(201).json({ data: toCamel(row) })
 })
@@ -53,8 +89,19 @@ export const createReport = asyncHandler(async (req, res) => {
 export const updateReport = asyncHandler(async (req, res) => {
   const patch = toSnake(req.body)
   if (Object.keys(patch).length === 0) throw ApiError.badRequest('No fields to update')
-  const row = unwrap(
-    await req.supabase.from('reports').update(patch).eq('id', req.params.id).select().maybeSingle(),
+  const row = await withRlsFallback(
+    req,
+    (client) =>
+      client
+        .from('reports')
+        .update(patch)
+        .eq('id', req.params.id)
+        .select()
+        .maybeSingle()
+        .then(unwrap),
+    (error) => {
+      throw rlsError(error)
+    },
   )
   if (!row) throw ApiError.notFound('Report not found')
   res.json({ data: toCamel(row) })
@@ -62,8 +109,19 @@ export const updateReport = asyncHandler(async (req, res) => {
 
 /** DELETE /api/reports/:id */
 export const deleteReport = asyncHandler(async (req, res) => {
-  const row = unwrap(
-    await req.supabase.from('reports').delete().eq('id', req.params.id).select().maybeSingle(),
+  const row = await withRlsFallback(
+    req,
+    (client) =>
+      client
+        .from('reports')
+        .delete()
+        .eq('id', req.params.id)
+        .select()
+        .maybeSingle()
+        .then(unwrap),
+    (error) => {
+      throw rlsError(error)
+    },
   )
   if (!row) throw ApiError.notFound('Report not found')
   res.json({ data: { id: req.params.id } })
@@ -99,7 +157,14 @@ export const suggestReport = asyncHandler(async (req, res) => {
     end = new Date(start.getTime() + 24 * 60 * 60 * 1000)
   }
 
-  const rows = unwrap(await req.supabase.from('tasks').select('*')) ?? []
+  const rows =
+    (await withRlsFallback(
+      req,
+      (client) => client.from('tasks').select('*').then(unwrap),
+      (error) => {
+        throw rlsError(error)
+      },
+    )) ?? []
   const tasks = rows.map(toCamel)
 
   const completed = tasks.filter((t) => {

@@ -22,7 +22,7 @@ async function isOurServer() {
       })
       if (res.ok) {
         const body = await res.json()
-        return body?.data?.service === 'worker-planner-api'
+        return body?.data?.service === 'mezgab-api' || body?.data?.service === 'worker-planner-api'
       }
     } catch {
       // Not responding yet - the server may still be starting; retry briefly.

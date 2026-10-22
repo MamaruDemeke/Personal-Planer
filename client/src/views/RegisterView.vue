@@ -42,7 +42,7 @@ async function onSubmit() {
   try {
     const data = await auth.signUp(form.email.trim(), form.password, form.fullName.trim())
     if (data?.session) {
-      toast.success('Account created', 'Welcome to Worker Planner!')
+      toast.success('Account created', 'Welcome to Mezgab!')
       router.replace('/')
     } else {
       needsConfirmation.value = true

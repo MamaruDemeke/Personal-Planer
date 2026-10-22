@@ -2,6 +2,7 @@ import { ApiError } from '../utils/ApiError.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { toCamel, toSnake } from '../utils/case.js'
 import { unwrap } from '../utils/db.js'
+import { rlsError, withRlsFallback } from '../utils/rls.js'
 
 function addDaysIso(d, n) {
   const x = new Date(d)
@@ -48,41 +49,60 @@ export const listTasks = asyncHandler(async (req, res) => {
   const sortCol = SORTS[req.query.sort] ?? 'created_at'
   const ascending = String(req.query.order).toLowerCase() === 'asc'
 
-  let query = req.supabase.from('tasks').select('*')
+  const rows = await withRlsFallback(
+    req,
+    async (client) => {
+      let query = client.from('tasks').select('*')
 
-  if (search && String(search).trim()) {
-    const term = String(search)
-      .trim()
-      .replace(/[%,()*]/g, ' ')
-    query = query.or(
-      `title.ilike.%${term}%,description.ilike.%${term}%,notes.ilike.%${term}%`,
-    )
-  }
-  if (priority) query = query.eq('priority', priority)
-  if (categoryId) query = query.eq('category_id', categoryId)
+      if (search && String(search).trim()) {
+        const term = String(search)
+          .trim()
+          .replace(/[%,()*]/g, ' ')
+        query = query.or(
+          `title.ilike.%${term}%,description.ilike.%${term}%,notes.ilike.%${term}%`,
+        )
+      }
+      if (priority) query = query.eq('priority', priority)
+      if (categoryId) query = query.eq('category_id', categoryId)
 
-  const nowIso = new Date().toISOString()
-  if (status === 'overdue') {
-    query = query.neq('status', 'completed').lt('deadline', nowIso)
-  } else if (status === 'active') {
-    query = query.neq('status', 'completed')
-  } else if (status) {
-    query = query.eq('status', status)
-  }
+      const nowIso = new Date().toISOString()
+      if (status === 'overdue') {
+        query = query.neq('status', 'completed').lt('deadline', nowIso)
+      } else if (status === 'active') {
+        query = query.neq('status', 'completed')
+      } else if (status) {
+        query = query.eq('status', status)
+      }
 
-  if (from) query = query.gte('deadline', from)
-  if (to) query = query.lte('deadline', to)
+      if (from) query = query.gte('deadline', from)
+      if (to) query = query.lte('deadline', to)
 
-  query = query.order(sortCol, { ascending, nullsFirst: false })
+      query = query.order(sortCol, { ascending, nullsFirst: false })
 
-  const data = unwrap(await query)
-  res.json({ data: (data ?? []).map(toCamel).map(decorate) })
+      return unwrap(await query)
+    },
+    (error) => {
+      throw rlsError(error)
+    },
+  )
+
+  res.json({ data: (rows ?? []).map(toCamel).map(decorate) })
 })
 
 /** GET /api/tasks/:id */
 export const getTask = asyncHandler(async (req, res) => {
-  const row = unwrap(
-    await req.supabase.from('tasks').select('*').eq('id', req.params.id).maybeSingle(),
+  const row = await withRlsFallback(
+    req,
+    (client) =>
+      client
+        .from('tasks')
+        .select('*')
+        .eq('id', req.params.id)
+        .maybeSingle()
+        .then(unwrap),
+    (error) => {
+      throw rlsError(error)
+    },
   )
   if (!row) throw ApiError.notFound('Task not found')
   res.json({ data: decorate(toCamel(row)) })
@@ -91,7 +111,13 @@ export const getTask = asyncHandler(async (req, res) => {
 /** POST /api/tasks */
 export const createTask = asyncHandler(async (req, res) => {
   const body = { ...toSnake(req.body), user_id: req.user.id }
-  const row = unwrap(await req.supabase.from('tasks').insert(body).select().single())
+  const row = await withRlsFallback(
+    req,
+    (client) => client.from('tasks').insert(body).select().single().then(unwrap),
+    (error) => {
+      throw rlsError(error)
+    },
+  )
   res.status(201).json({ data: decorate(toCamel(row)) })
 })
 
@@ -101,13 +127,34 @@ export const updateTask = asyncHandler(async (req, res) => {
   if (Object.keys(patch).length === 0) throw ApiError.badRequest('No fields to update')
 
   // Load the existing row so we can react to status transitions (recurring tasks).
-  const existing = unwrap(
-    await req.supabase.from('tasks').select('*').eq('id', req.params.id).maybeSingle(),
+  const existing = await withRlsFallback(
+    req,
+    (client) =>
+      client
+        .from('tasks')
+        .select('*')
+        .eq('id', req.params.id)
+        .maybeSingle()
+        .then(unwrap),
+    (error) => {
+      throw rlsError(error)
+    },
   )
   if (!existing) throw ApiError.notFound('Task not found')
 
-  const row = unwrap(
-    await req.supabase.from('tasks').update(patch).eq('id', req.params.id).select().maybeSingle(),
+  const row = await withRlsFallback(
+    req,
+    (client) =>
+      client
+        .from('tasks')
+        .update(patch)
+        .eq('id', req.params.id)
+        .select()
+        .maybeSingle()
+        .then(unwrap),
+    (error) => {
+      throw rlsError(error)
+    },
   )
   if (!row) throw ApiError.notFound('Task not found')
 
@@ -149,7 +196,13 @@ export const updateTask = asyncHandler(async (req, res) => {
       start_date: shift(existing.start_date),
       deadline: shift(existing.deadline),
     }
-    await req.supabase.from('tasks').insert(next)
+    await withRlsFallback(
+      req,
+      (client) => client.from('tasks').insert(next).then(unwrap),
+      (error) => {
+        throw rlsError(error)
+      },
+    )
   }
 
   res.json({ data: decorate(toCamel(row)) })
@@ -157,8 +210,19 @@ export const updateTask = asyncHandler(async (req, res) => {
 
 /** DELETE /api/tasks/:id */
 export const deleteTask = asyncHandler(async (req, res) => {
-  const row = unwrap(
-    await req.supabase.from('tasks').delete().eq('id', req.params.id).select().maybeSingle(),
+  const row = await withRlsFallback(
+    req,
+    (client) =>
+      client
+        .from('tasks')
+        .delete()
+        .eq('id', req.params.id)
+        .select()
+        .maybeSingle()
+        .then(unwrap),
+    (error) => {
+      throw rlsError(error)
+    },
   )
   if (!row) throw ApiError.notFound('Task not found')
   res.json({ data: { id: req.params.id } })

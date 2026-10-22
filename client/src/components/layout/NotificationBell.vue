@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Bell, BellRing, ShieldCheck } from 'lucide-vue-next'
+import { Bell, BellRing, ShieldCheck, Trash2, X } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -25,8 +25,8 @@ const toast = useToast()
 const router = useRouter()
 
 const enabled = reminders.enabled
-const overdue = reminders.overdue
-const upcoming = reminders.upcoming
+const overdue = reminders.visibleOverdue
+const upcoming = reminders.visibleUpcoming
 const dueSoonCount = reminders.dueSoonCount
 const totalCount = computed(() => (reminders.totalCount?.value ?? reminders.totalCount ?? 0) + (notifications.pendingCount?.value ?? notifications.pendingCount ?? 0))
 
@@ -43,6 +43,22 @@ const reviewTarget = computed(() => (access.isAdmin ? 'admin' : 'access'))
 
 function openReview() {
   router.push({ name: reviewTarget.value })
+}
+
+/** Remove a single notification once it has been seen. */
+function dismissNotification(id) {
+  notifications.dismiss(id)
+}
+
+/** Remove a single task reminder once it has been seen. */
+function dismissReminder(id) {
+  reminders.dismissTask(id)
+}
+
+/** Remove every listed notification and reminder. */
+function clearAll() {
+  notifications.dismissAll()
+  reminders.dismissAll()
 }
 
 async function enable() {
@@ -79,21 +95,31 @@ async function enable() {
       <DropdownMenuSeparator />
 
       <div class="max-h-72 overflow-y-auto p-1">
-        <template v-if="notifications.items.length">
+        <template v-if="notifications.visibleItems.length">
           <p class="px-2 pt-1.5 text-xs font-semibold uppercase tracking-wide text-primary">
             {{ access.isAdmin ? 'Payments to verify' : 'Payment updates' }}
           </p>
           <div
-            v-for="item in notifications.items.slice(0, 6)"
+            v-for="item in notifications.visibleItems.slice(0, 6)"
             :key="item.id"
-            class="cursor-pointer rounded-md px-2 py-1.5 transition-colors hover:bg-accent"
+            class="group flex cursor-pointer items-start gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-accent"
             @click="openReview"
           >
-            <p class="flex items-center gap-1.5 truncate text-sm">
-              <ShieldCheck class="h-3.5 w-3.5 shrink-0 text-primary" />
-              {{ item.title }}
-            </p>
-            <p class="truncate text-xs text-muted-foreground">{{ item.body }}</p>
+            <div class="min-w-0 flex-1">
+              <p class="flex items-center gap-1.5 truncate text-sm">
+                <ShieldCheck class="h-3.5 w-3.5 shrink-0 text-primary" />
+                {{ item.title }}
+              </p>
+              <p class="truncate text-xs text-muted-foreground">{{ item.body }}</p>
+            </div>
+            <button
+              type="button"
+              class="shrink-0 rounded-md p-1 text-muted-foreground opacity-70 transition hover:bg-destructive/10 hover:text-destructive sm:opacity-0 sm:group-hover:opacity-100"
+              :aria-label="`Delete notification: ${item.title}`"
+              @click.stop="dismissNotification(item.id)"
+            >
+              <X class="h-3.5 w-3.5" />
+            </button>
           </div>
           <DropdownMenuSeparator v-if="overdue.length || upcoming.length" />
         </template>
@@ -105,10 +131,20 @@ async function enable() {
           <div
             v-for="task in overdue.slice(0, 5)"
             :key="task.id"
-            class="rounded-md px-2 py-1.5"
+            class="group flex items-start gap-2 rounded-md px-2 py-1.5"
           >
-            <p class="truncate text-sm">{{ task.title }}</p>
-            <p class="text-xs text-muted-foreground">{{ formatDue(task.deadline) }}</p>
+            <div class="min-w-0 flex-1">
+              <p class="truncate text-sm">{{ task.title }}</p>
+              <p class="text-xs text-muted-foreground">{{ formatDue(task.deadline) }}</p>
+            </div>
+            <button
+              type="button"
+              class="shrink-0 rounded-md p-1 text-muted-foreground opacity-70 transition hover:bg-destructive/10 hover:text-destructive sm:opacity-0 sm:group-hover:opacity-100"
+              :aria-label="`Delete reminder: ${task.title}`"
+              @click.stop="dismissReminder(task.id)"
+            >
+              <X class="h-3.5 w-3.5" />
+            </button>
           </div>
         </template>
 
@@ -119,15 +155,25 @@ async function enable() {
           <div
             v-for="task in upcoming.slice(0, 5)"
             :key="task.id"
-            class="rounded-md px-2 py-1.5"
+            class="group flex items-start gap-2 rounded-md px-2 py-1.5"
           >
-            <p class="truncate text-sm">{{ task.title }}</p>
-            <p class="text-xs text-muted-foreground">{{ formatDue(task.deadline) }}</p>
+            <div class="min-w-0 flex-1">
+              <p class="truncate text-sm">{{ task.title }}</p>
+              <p class="text-xs text-muted-foreground">{{ formatDue(task.deadline) }}</p>
+            </div>
+            <button
+              type="button"
+              class="shrink-0 rounded-md p-1 text-muted-foreground opacity-70 transition hover:bg-destructive/10 hover:text-destructive sm:opacity-0 sm:group-hover:opacity-100"
+              :aria-label="`Delete reminder: ${task.title}`"
+              @click.stop="dismissReminder(task.id)"
+            >
+              <X class="h-3.5 w-3.5" />
+            </button>
           </div>
         </template>
 
         <p
-          v-if="!notifications.items.length && !overdue.length && !upcoming.length"
+          v-if="!notifications.visibleItems.length && !overdue.length && !upcoming.length"
           class="px-2 py-6 text-center text-sm text-muted-foreground"
         >
           You're all caught up.
@@ -136,7 +182,15 @@ async function enable() {
 
       <DropdownMenuSeparator />
       <DropdownMenuItem
-        v-if="notifications.items.length"
+        v-if="notifications.visibleItems.length || overdue.length || upcoming.length"
+        class="justify-center text-destructive focus:text-destructive"
+        @select="clearAll"
+      >
+        <Trash2 class="h-4 w-4" />
+        Clear all notifications
+      </DropdownMenuItem>
+      <DropdownMenuItem
+        v-if="notifications.visibleItems.length"
         class="justify-center text-primary focus:text-primary"
         @select="openReview"
       >

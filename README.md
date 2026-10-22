@@ -1,6 +1,6 @@
-# Worker Planner
+# Mezgab
 
-**Worker Planner** is a personal task planner for organising work, tracking progress and reporting
+**Mezgab** (መዝገብ, "Register/Ledger") is a personal task planner for organising work, tracking progress and reporting
 on it. Register an account, plan tasks across **daily / weekly / monthly / yearly** views, watch your
 **completion stats**, get **reminders** for due work, and write **daily work reports**.
 
@@ -109,9 +109,13 @@ If port 4000 or 5173 is already in use, a stale dev stack is still running. Stop
    - `supabase/migrations/0008_personal_diary.sql` — personal diary / notes table
    - `supabase/migrations/0009_task_reminders_and_work_notes.sql` — per-task reminder
      timestamp + work notes
+   - `supabase/migrations/0010_restore_rls_policies.sql` - **re-creates the RLS policies**
+     for `tasks`, `categories`, `reports`, `notes`, `profiles` and `payment_submissions`
 
    > `0001` begins by dropping the app tables so it can be re-run. On an existing project this
-   > **resets their data** — intended for the fresh Worker Planner schema.
+   > **resets their data** - intended for the fresh Mezgab schema. Dropping a table also removes
+   > its RLS policies, so always run `0010_restore_rls_policies.sql` afterwards - without those
+   > policies every write fails with "new row violates row-level security policy for table tasks".
 
 2. **Add your API credentials.** Dashboard → **Project Settings → API**, then edit:
    - `client/.env` → `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `VITE_API_BASE_URL`
@@ -167,7 +171,7 @@ To build a downloadable native app (Android/iOS) with Capacitor:
 ```bash
 cd client
 npm install @capacitor/core @capacitor/cli @capacitor/android @capacitor/ios
-npx cap init "Worker Planner" com.workerplanner.app --web-dir dist
+npx cap init "Mezgab" com.mezgab.app --web-dir dist
 npm run build
 npx cap add android
 npx cap sync

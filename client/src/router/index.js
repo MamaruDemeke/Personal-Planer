@@ -152,7 +152,7 @@ router.beforeEach(async (to) => {
 
 router.afterEach((to) => {
   const title = to.meta?.title
-  document.title = title ? `${title} · Worker Planner` : 'Worker Planner'
+  document.title = title ? `${title} · Mezgab` : 'Mezgab'
 })
 
 export default router

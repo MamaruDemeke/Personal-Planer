@@ -1,6 +1,6 @@
 {
-  "name": "Worker Planner",
-  "short_name": "Worker Planner",
+  "name": "Mezgab",
+  "short_name": "Mezgab",
   "description": "Plan tasks, track progress, and write daily reports.",
   "start_url": "/",
   "display": "standalone",

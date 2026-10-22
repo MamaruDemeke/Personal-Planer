@@ -229,12 +229,16 @@ create index idx_notes_user_updated on public.notes (user_id, updated_at desc);
 
 alter table public.notes enable row level security;
 
+drop policy if exists "notes owner select" on public.notes;
 create policy "notes owner select" on public.notes
   for select using (auth.uid() = user_id);
+drop policy if exists "notes owner insert" on public.notes;
 create policy "notes owner insert" on public.notes
   for insert with check (auth.uid() = user_id);
+drop policy if exists "notes owner update" on public.notes;
 create policy "notes owner update" on public.notes
   for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+drop policy if exists "notes owner delete" on public.notes;
 create policy "notes owner delete" on public.notes
   for delete using (auth.uid() = user_id);
 
@@ -271,3 +275,78 @@ drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
+
+-- -----------------------------------------------------------------------------
+-- Row Level Security policies for every user-owned table.
+--
+-- Re-running this file drops and recreates the tables above, which removes their
+-- policies. These statements are re-applied here (and live in
+-- 0010_restore_rls_policies.sql) so the schema is always left in a usable
+-- state. Idempotent - safe to run repeatedly.
+-- -----------------------------------------------------------------------------
+alter table public.profiles enable row level security;
+drop policy if exists "profiles_select_own" on public.profiles;
+create policy "profiles_select_own" on public.profiles
+  for select using (auth.uid() = id);
+drop policy if exists "profiles_insert_own" on public.profiles;
+create policy "profiles_insert_own" on public.profiles
+  for insert with check (auth.uid() = id);
+drop policy if exists "profiles_update_own" on public.profiles;
+create policy "profiles_update_own" on public.profiles
+  for update using (auth.uid() = id) with check (auth.uid() = id);
+
+alter table public.categories enable row level security;
+drop policy if exists "categories_select_own" on public.categories;
+create policy "categories_select_own" on public.categories
+  for select using (auth.uid() = user_id);
+drop policy if exists "categories_insert_own" on public.categories;
+create policy "categories_insert_own" on public.categories
+  for insert with check (auth.uid() = user_id);
+drop policy if exists "categories_update_own" on public.categories;
+create policy "categories_update_own" on public.categories
+  for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+drop policy if exists "categories_delete_own" on public.categories;
+create policy "categories_delete_own" on public.categories
+  for delete using (auth.uid() = user_id);
+
+alter table public.tasks enable row level security;
+drop policy if exists "tasks_select_own" on public.tasks;
+create policy "tasks_select_own" on public.tasks
+  for select using (auth.uid() = user_id);
+drop policy if exists "tasks_insert_own" on public.tasks;
+create policy "tasks_insert_own" on public.tasks
+  for insert with check (auth.uid() = user_id);
+drop policy if exists "tasks_update_own" on public.tasks;
+create policy "tasks_update_own" on public.tasks
+  for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+drop policy if exists "tasks_delete_own" on public.tasks;
+create policy "tasks_delete_own" on public.tasks
+  for delete using (auth.uid() = user_id);
+
+alter table public.reports enable row level security;
+drop policy if exists "reports_select_own" on public.reports;
+create policy "reports_select_own" on public.reports
+  for select using (auth.uid() = user_id);
+drop policy if exists "reports_insert_own" on public.reports;
+create policy "reports_insert_own" on public.reports
+  for insert with check (auth.uid() = user_id);
+drop policy if exists "reports_update_own" on public.reports;
+create policy "reports_update_own" on public.reports
+  for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+drop policy if exists "reports_delete_own" on public.reports;
+create policy "reports_delete_own" on public.reports
+  for delete using (auth.uid() = user_id);
+
+alter table public.notes enable row level security;
+drop policy if exists "notes owner select" on public.notes;
+create policy "notes owner select" on public.notes
+  for select using (auth.uid() = user_id);
+drop policy if exists "notes owner insert" on public.notes;
+create policy "notes owner insert" on public.notes
+  for insert with check (auth.uid() = user_id);
+drop policy if exists "notes owner update" on public.notes;
+create policy "notes owner update" on public.notes
+  for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+drop policy if exists "notes owner delete" on public.notes;
+create policy "notes owner delete" on public.notes
+  for delete using (auth.uid() = user_id);

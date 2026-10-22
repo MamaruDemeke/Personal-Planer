@@ -179,7 +179,7 @@ async function signOut() {
       >
         <HardHat class="h-5 w-5" />
       </span>
-      <span class="text-gradient text-lg font-bold tracking-tight">Worker Planner</span>
+        <span class="text-gradient text-lg font-bold tracking-tight">{{ t('app.name') }}</span>
         <Button variant="ghost" size="sm" class="ml-auto" @click="goBack">
           <ArrowLeft class="h-4 w-4" /> {{ t('access.back') }}
         </Button>

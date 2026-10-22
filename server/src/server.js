@@ -13,7 +13,7 @@ function listen(attempt = 0) {
   currentServer = server
 
   server.once('listening', () => {
-    console.log(`Worker Planner API listening on http://localhost:${env.port} (${env.nodeEnv})`)
+    console.log(`Mezgab API listening on http://localhost:${env.port} (${env.nodeEnv})`)
   })
 
   server.once('error', (error) => {

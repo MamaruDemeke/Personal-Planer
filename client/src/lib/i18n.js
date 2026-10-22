@@ -1,9 +1,10 @@
 import { ref, computed } from 'vue'
 
-const STORAGE_KEY = 'worker-planner-locale'
+const STORAGE_KEY = 'mezgab-locale'
 
 const messages = {
   en: {
+    'app.name': 'Mezgab',
     'nav.dashboard': 'Dashboard',
     'nav.tasks': 'My Tasks',
     'nav.daily': 'Daily',
@@ -56,14 +57,14 @@ const messages = {
     'common.saving': 'Saving...',
     'common.export': 'Export',
     'login.welcomeBack': 'Welcome back',
-    'login.signInSubtitle': 'Sign in to your Worker Planner account',
+    'login.signInSubtitle': 'Sign in to your Mezgab account',
     'login.email': 'Email',
     'login.password': 'Password',
     'login.emailPlaceholder': 'you@example.com',
     'login.createOne': 'Create one',
     'login.signingIn': 'Signing in…',
     'register.createAccount': 'Create your account',
-    'register.startOrganizing': 'Start organizing your work with Worker Planner',
+    'register.startOrganizing': 'Start organizing your work with Mezgab',
     'register.confirmPassword': 'Confirm password',
     'access.couldNotLoad': 'Could not load your access',
     'access.verifyPayment': 'Verify your payment',
@@ -129,9 +130,10 @@ const messages = {
     'tasks.deleteConfirm': 'Delete “{title}”? This cannot be undone.',
     'tasks.saveChanges': 'Save changes',
     'tasks.createTask': 'Create task',
-    'app.title': 'Worker Planner',
+    'app.title': 'Mezgab',
   },
   am: {
+    'app.name': 'መዝገብ',
     'nav.dashboard': 'ዳሽቦርድ',
     'nav.tasks': 'ተግባሮቼ',
     'nav.daily': 'ዕለታዊ',
@@ -257,9 +259,10 @@ const messages = {
     'tasks.deleteConfirm': '“{title}” ይሰረዝ? ይህ ሊቀለበስ አይችልም።',
     'tasks.saveChanges': 'ለውጦችን አስቀምጥ',
     'tasks.createTask': 'ተግባር ፍጠር',
-    'app.title': 'Worker Planner',
+    'app.title': 'Mezgab',
   },
   om: {
+    'app.name': 'Mezgab',
     'nav.dashboard': 'Daashboordii',
     'nav.tasks': 'Hojii koo',
     'nav.daily': 'Guyyaa',
@@ -289,9 +292,10 @@ const messages = {
     'header.signOut': 'Ba\'i',
     'header.signIn': 'Seeni',
     'header.theme': 'Bifa',
-    'app.title': 'Worker Planner',
+    'app.title': 'Mezgab',
   },
   ti: {
+    'app.name': 'መዝገብ',
     'nav.dashboard': 'ዳሽቦርድ',
     'nav.tasks': 'ዕማገታተይ',
     'nav.daily': 'ዕለታዊ',
@@ -321,9 +325,10 @@ const messages = {
     'header.signOut': 'ውጣ',
     'header.signIn': 'ግባ',
     'header.theme': 'ገጽታ',
-    'app.title': 'Worker Planner',
+    'app.title': 'Mezgab',
   },
   so: {
+    'app.name': 'Mezgab',
     'nav.dashboard': 'Dashboard',
     'nav.tasks': 'Hawlahayga',
     'nav.daily': 'Maalinlaha',
@@ -353,9 +358,10 @@ const messages = {
     'header.signOut': 'Ka bax',
     'header.signIn': 'Gali',
     'header.theme': 'Muuqaal',
-    'app.title': 'Worker Planner',
+    'app.title': 'Mezgab',
   },
   ag: {
+    'app.name': 'Mezgab',
     'nav.dashboard': 'ዳሽቦርድ',
     'nav.tasks': 'ተግባሮቼ',
     'nav.daily': 'ዕለታዊ',
@@ -385,7 +391,7 @@ const messages = {
     'header.signOut': 'ውጣ',
     'header.signIn': 'ግባ',
     'header.theme': 'ገጽታ',
-    'app.title': 'Worker Planner',
+    'app.title': 'Mezgab',
   },
 }
 
