@@ -8,11 +8,13 @@ import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/composables/useToast'
+import { useI18n } from '@/lib/i18n'
 
 const auth = useAuthStore()
 const router = useRouter()
 const route = useRoute()
 const toast = useToast()
+const { t } = useI18n()
 
 const form = reactive({ email: '', password: '' })
 const errors = reactive({})
@@ -46,7 +48,7 @@ async function onSubmit() {
 </script>
 
 <template>
-  <AuthLayout title="Welcome back" subtitle="Sign in to your Worker Planner account">
+    <AuthLayout :title="t('login.welcomeBack')" :subtitle="t('login.signInSubtitle')">
     <div
       v-if="!auth.isConfigured"
       class="mb-5 flex gap-3 rounded-lg border border-warning/40 bg-warning/10 p-3 text-sm"
@@ -60,7 +62,7 @@ async function onSubmit() {
 
     <form class="space-y-4" novalidate @submit.prevent="onSubmit">
       <div class="space-y-2">
-        <Label for="email">Email</Label>
+          <Label for="email">{{ t('login.email') }}</Label>
         <div class="relative">
           <Mail class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -68,7 +70,7 @@ async function onSubmit() {
             v-model="form.email"
             type="email"
             autocomplete="email"
-            placeholder="you@example.com"
+            :placeholder="t('login.emailPlaceholder')"
             class="pl-9"
           />
         </div>
@@ -77,7 +79,7 @@ async function onSubmit() {
 
       <div class="space-y-2">
         <div class="flex items-center justify-between">
-          <Label for="password">Password</Label>
+          <Label for="password">{{ t('login.password') }}</Label>
           <RouterLink to="/forgot-password" class="text-xs text-primary hover:underline">
             Forgot password?
           </RouterLink>
@@ -107,15 +109,15 @@ async function onSubmit() {
 
       <Button type="submit" class="w-full" :disabled="submitting || !auth.isConfigured">
         <Loader2 v-if="submitting" class="h-4 w-4 animate-spin" />
-        <span>{{ submitting ? 'Signing in…' : 'Sign in' }}</span>
+        <span>{{ submitting ? t('login.signingIn') : t('header.signIn') }}</span>
         <ArrowRight v-if="!submitting" class="h-4 w-4" />
       </Button>
     </form>
 
     <p class="mt-6 text-center text-sm text-muted-foreground">
       Don't have an account?
-      <RouterLink to="/register" class="font-medium text-primary hover:underline">
-        Create one
+        <RouterLink to="/register" class="font-medium text-primary hover:underline">
+          {{ t('login.createOne') }}
       </RouterLink>
     </p>
 

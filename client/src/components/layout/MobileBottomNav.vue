@@ -2,15 +2,17 @@
 import { LayoutDashboard, ListTodo, CalendarDays, BookOpen, Menu } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
 import { Button } from '@/components/ui/button'
+import { useI18n } from '@/lib/i18n'
 
 const emit = defineEmits(['open-menu'])
 const router = useRouter()
+const { t } = useI18n()
 
 const items = [
-  { label: 'Home', icon: LayoutDashboard, to: { name: 'dashboard' } },
-  { label: 'Tasks', icon: ListTodo, to: { name: 'tasks' } },
-  { label: 'Plan', icon: CalendarDays, to: { name: 'plan-daily' } },
-  { label: 'Diary', icon: BookOpen, to: { name: 'diary' } },
+  { label: t('nav.dashboard'), icon: LayoutDashboard, to: { name: 'dashboard' } },
+  { label: t('nav.tasks'), icon: ListTodo, to: { name: 'tasks' } },
+  { label: t('nav.daily'), icon: CalendarDays, to: { name: 'plan-daily' } },
+  { label: t('nav.diary'), icon: BookOpen, to: { name: 'diary' } },
 ]
 
 function go(to) {
@@ -39,7 +41,7 @@ function go(to) {
       @click="emit('open-menu')"
     >
       <Menu class="h-5 w-5" />
-      More
+      {{ t('header.menu') }}
     </button>
   </nav>
 </template>

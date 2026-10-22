@@ -53,7 +53,7 @@ async function onSignOut() {
 
 <template>
   <header
-    class="sticky top-0 z-30 flex h-14 items-center gap-2 border-b bg-background/80 px-3 backdrop-blur-md sm:h-16 sm:px-5 lg:px-8"
+    class="sticky top-0 z-30 flex h-14 items-center gap-1.5 border-b bg-background/90 px-2.5 backdrop-blur-md pt-[env(safe-area-inset-top)] sm:h-16 sm:gap-2 sm:px-5 lg:px-8"
   >
     <button
       type="button"
@@ -78,13 +78,16 @@ async function onSignOut() {
     <div class="ml-auto flex items-center gap-1">
       <select
         v-model="locale"
-        class="h-8 rounded-md border bg-background px-2 text-xs"
+        class="h-8 max-w-[92px] rounded-md border bg-background px-1 text-[11px] sm:max-w-[110px] sm:px-1.5 sm:text-xs"
         aria-label="Language"
         @change="setLocale(locale)"
       >
         <option v-for="l in availableLocales" :key="l.value" :value="l.value">{{ l.label }}</option>
       </select>
-      <span class="hidden text-xs font-medium text-muted-foreground sm:inline">
+      <span class="hidden whitespace-nowrap rounded-md bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-700 ring-1 ring-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:ring-blue-800 md:inline sm:text-xs">
+        {{ ethDate }}
+      </span>
+      <span class="whitespace-nowrap rounded-md bg-blue-50 px-1.5 py-0.5 text-[10px] font-medium text-blue-700 ring-1 ring-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:ring-blue-800 md:hidden">
         {{ ethDate }}
       </span>
       <NotificationBell v-if="auth.isAuthenticated" />

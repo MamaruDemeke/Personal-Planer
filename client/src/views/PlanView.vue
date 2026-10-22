@@ -62,6 +62,12 @@ const { ensureWrite } = useAccessGate()
 const { t } = useI18n()
 
 const PERIOD_LABELS = { daily: 'Daily', weekly: 'Weekly', monthly: 'Monthly', yearly: 'Yearly' }
+const PERIOD_OPTIONS = [
+  { value: 'daily', label: 'Daily' },
+  { value: 'weekly', label: 'Weekly' },
+  { value: 'monthly', label: 'Monthly' },
+  { value: 'yearly', label: 'Yearly' },
+]
 const PERIOD_DESCRIPTIONS = {
   daily: 'Plan and track today’s work.',
   weekly: 'Balance the week ahead.',
@@ -288,6 +294,10 @@ const fields = computed(() => [
 
 const createInitial = ref(null)
 
+function setPeriod(next) {
+  router.push({ name: `plan-${next}`, query: route.query })
+}
+
 function openCreate(prefillDate = null) {
   if (!ensureWrite()) return
   editing.value = null
@@ -423,6 +433,18 @@ function resetFilters() {
     <PageHeader :title="heading" :description="`${label} · ${PERIOD_DESCRIPTIONS[period]}`">
       <template #actions>
         <div class="flex flex-wrap items-center gap-1">
+        <div class="mr-1 flex rounded-lg border border-blue-200 bg-blue-50 p-0.5 dark:border-blue-800 dark:bg-blue-950/40">
+          <Button
+            v-for="opt in PERIOD_OPTIONS"
+            :key="opt.value"
+            size="sm"
+            :variant="period === opt.value ? 'default' : 'ghost'"
+            class="h-7 px-2.5 text-xs"
+            @click="setPeriod(opt.value)"
+          >
+            {{ opt.label }}
+          </Button>
+        </div>
           <Button variant="outline" size="icon" aria-label="Previous" @click="shift(-1)">
             <ChevronLeft class="h-4 w-4" />
           </Button>
@@ -434,13 +456,16 @@ function resetFilters() {
             <RefreshCw class="h-4 w-4" :class="rolling && 'animate-spin'" />
             <span class="hidden sm:inline">{{ t('plan.rollover') }}</span>
           </Button>
-          <Button variant="outline" @click="exportPlan">
+        <Button variant="outline" @click="exportPlan" class="sm:hidden">
+          <Copy class="h-4 w-4" />
+        </Button>
+        <Button variant="outline" @click="exportPlan" class="hidden sm:flex">
             <Copy class="h-4 w-4" />
-            <span class="hidden sm:inline">{{ t('common.export') }}</span>
+            <span>{{ t('common.export') }}</span>
           </Button>
-          <Button @click="openCreate()">
+        <Button @click="openCreate()">
             <Plus class="h-4 w-4" />
-            <span class="hidden sm:inline">{{ t('common.newTask') }}</span>
+            <span>{{ t('common.newTask') }}</span>
           </Button>
         </div>
       </template>
@@ -456,6 +481,18 @@ function resetFilters() {
     />
 
     <template v-else>
+      <div class="flex gap-1 rounded-lg border border-blue-200 bg-blue-50 p-0.5 dark:border-blue-800 dark:bg-blue-950/40">
+        <Button
+          v-for="opt in PERIOD_OPTIONS"
+          :key="opt.value"
+          size="sm"
+          :variant="period === opt.value ? 'default' : 'ghost'"
+          class="h-7 flex-1 px-2.5 text-xs"
+          @click="setPeriod(opt.value)"
+        >
+          {{ opt.label }}
+        </Button>
+      </div>
       <!-- Stats -->
       <Card>
         <CardContent class="space-y-3 pt-4">

@@ -8,10 +8,12 @@ import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/composables/useToast'
+import { useI18n } from '@/lib/i18n'
 
 const auth = useAuthStore()
 const router = useRouter()
 const toast = useToast()
+const { t } = useI18n()
 
 const form = reactive({ fullName: '', email: '', password: '', confirm: '' })
 const errors = reactive({})
@@ -55,7 +57,7 @@ async function onSubmit() {
 </script>
 
 <template>
-  <AuthLayout title="Create your account" subtitle="Start organizing your work with Worker Planner">
+    <AuthLayout :title="t('register.createAccount')" :subtitle="t('register.startOrganizing')">
     <div
       v-if="needsConfirmation"
       class="flex gap-3 rounded-lg border border-success/40 bg-success/10 p-4 text-sm"
@@ -80,7 +82,7 @@ async function onSubmit() {
 
     <form v-if="!needsConfirmation" class="space-y-4" novalidate @submit.prevent="onSubmit">
       <div class="space-y-2">
-        <Label for="fullName">Full name</Label>
+          <Label for="fullName">{{ t('settings.fullName') }}</Label>
         <div class="relative">
           <User class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input id="fullName" v-model="form.fullName" autocomplete="name" placeholder="Jane Doe" class="pl-9" />
@@ -89,7 +91,7 @@ async function onSubmit() {
       </div>
 
       <div class="space-y-2">
-        <Label for="email">Email</Label>
+          <Label for="email">{{ t('login.email') }}</Label>
         <div class="relative">
           <Mail class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input id="email" v-model="form.email" type="email" autocomplete="email" placeholder="you@example.com" class="pl-9" />
@@ -99,7 +101,7 @@ async function onSubmit() {
 
       <div class="grid gap-4 sm:grid-cols-2">
         <div class="space-y-2">
-          <Label for="password">Password</Label>
+          <Label for="password">{{ t('login.password') }}</Label>
           <div class="relative">
             <Lock class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input id="password" v-model="form.password" type="password" autocomplete="new-password" placeholder="••••••••" class="pl-9" />
@@ -107,7 +109,7 @@ async function onSubmit() {
           <p v-if="errors.password" class="text-xs text-destructive">{{ errors.password }}</p>
         </div>
         <div class="space-y-2">
-          <Label for="confirm">Confirm password</Label>
+          <Label for="confirm">{{ t('register.confirmPassword') }}</Label>
           <Input id="confirm" v-model="form.confirm" type="password" autocomplete="new-password" placeholder="••••••••" />
           <p v-if="errors.confirm" class="text-xs text-destructive">{{ errors.confirm }}</p>
         </div>
@@ -122,7 +124,7 @@ async function onSubmit() {
 
     <p v-if="!needsConfirmation" class="mt-6 text-center text-sm text-muted-foreground">
       Already have an account?
-      <RouterLink to="/login" class="font-medium text-primary hover:underline">Sign in</RouterLink>
+        <RouterLink to="/login" class="font-medium text-primary hover:underline">{{ t('header.signIn') }}</RouterLink>
     </p>
   </AuthLayout>
 </template>

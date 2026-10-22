@@ -264,7 +264,7 @@ async function signOut() {
 
     <ConfirmDeleteDialog
       v-model:open="deleteOpen"
-      title="Delete category"
+      :title="t('settings.deleteCategory')"
       :description="`Delete “${deleting?.name ?? ''}”? Tasks keep their data but lose this category.`"
       :loading="deleteLoading"
       @confirm="confirmDeleteCategory"

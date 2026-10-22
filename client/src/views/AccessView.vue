@@ -25,6 +25,7 @@ import ErrorState from '@/components/common/ErrorState.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useAccessStore } from '@/stores/access'
 import { useToast } from '@/composables/useToast'
+import { useI18n } from '@/lib/i18n'
 import { api } from '@/services/api'
 import { formatDateTime } from '@/lib/format'
 
@@ -33,6 +34,7 @@ const access = useAccessStore()
 const route = useRoute()
 const router = useRouter()
 const toast = useToast()
+const { t } = useI18n()
 
 const MAX_IMAGE_BYTES = 1.4 * 1024 * 1024
 const MAX_PROOF_CHARS = 2_000_000
@@ -178,10 +180,9 @@ async function signOut() {
         <HardHat class="h-5 w-5" />
       </span>
       <span class="text-gradient text-lg font-bold tracking-tight">Worker Planner</span>
-      <Button variant="ghost" size="sm" class="ml-auto" @click="goBack">
-        <ArrowLeft class="h-4 w-4" />
-        Back to planner
-      </Button>
+        <Button variant="ghost" size="sm" class="ml-auto" @click="goBack">
+          <ArrowLeft class="h-4 w-4" /> {{ t('access.back') }}
+        </Button>
       <Button variant="ghost" size="sm" @click="signOut">
         <LogOut class="h-4 w-4" />
         Sign out
@@ -196,7 +197,7 @@ async function signOut() {
 
       <ErrorState
         v-else-if="loadError && !summary"
-        title="Could not load your access"
+        :title="t('access.couldNotLoad')"
         :description="loadError"
         @retry="refresh"
       />
@@ -222,7 +223,7 @@ async function signOut() {
                 }}
               </p>
             </div>
-            <Button @click="continueToApp">Continue to the planner</Button>
+            <Button @click="continueToApp">{{ t('access.continue') }}</Button>
           </CardContent>
         </Card>
 
@@ -236,7 +237,7 @@ async function signOut() {
 
           <div class="mb-6 space-y-2 text-center">
             <Badge :variant="statusMeta.variant">{{ statusMeta.label }}</Badge>
-            <h1 class="text-2xl font-semibold tracking-tight">Verify your payment</h1>
+            <h1 class="text-2xl font-semibold tracking-tight">{{ t('access.verifyPayment') }}</h1>
             <p class="mx-auto max-w-lg text-sm text-muted-foreground">
               Upload your payment receipt or enter the transaction number. Your planner stays locked
               until an administrator verifies and approves your account.
