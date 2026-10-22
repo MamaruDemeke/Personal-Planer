@@ -1,0 +1,9 @@
+{
+  "appId": "com.workerplanner.app",
+  "appName": "Worker Planner",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  }
+}

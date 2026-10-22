@@ -4,6 +4,8 @@ import { RouterView, useRouter } from 'vue-router'
 import { Lock, Receipt } from 'lucide-vue-next'
 import AppHeader from './AppHeader.vue'
 import AppSidebar from './AppSidebar.vue'
+import MobileBottomNav from './MobileBottomNav.vue'
+import PwaInstallPrompt from './PwaInstallPrompt.vue'
 import { Button } from '@/components/ui/button'
 import { useAccessStore } from '@/stores/access'
 import { useReminders } from '@/composables/useReminders'
@@ -44,7 +46,7 @@ function goToPayment() {
 
     <div class="lg:pl-64">
       <AppHeader @toggle-sidebar="sidebarOpen = !sidebarOpen" />
-      <main class="px-3 py-4 sm:px-5 sm:py-6 lg:px-8">
+      <main class="px-3 py-4 pb-20 sm:px-5 sm:py-6 sm:pb-24 lg:px-8 lg:pb-6">
         <div class="mx-auto w-full max-w-6xl space-y-4 sm:space-y-6">
           <div
             v-if="locked"
@@ -81,5 +83,8 @@ function goToPayment() {
         </div>
       </main>
     </div>
+
+    <MobileBottomNav @open-menu="sidebarOpen = true" />
+    <PwaInstallPrompt />
   </div>
 </template>

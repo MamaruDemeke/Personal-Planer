@@ -2,6 +2,7 @@ import { computed, ref } from 'vue'
 import { format } from 'date-fns'
 import { useAuthStore } from '@/stores/auth'
 import { useDashboardStore } from '@/stores/dashboard'
+import { api } from '@/services/api'
 import { useToast } from '@/composables/useToast'
 
 /**
@@ -23,10 +24,12 @@ const supportsNotifications =
 const permission = ref(supportsNotifications ? window.Notification.permission : 'unsupported')
 const overdue = ref([])
 const upcoming = ref([])
+const reminded = ref([])
 const enabled = ref(supportsNotifications && window.Notification?.permission === 'granted')
 
 let notified = loadNotified()
 let timer = null
+const reminderTimers = []
 
 function loadNotified() {
   try {
@@ -107,6 +110,7 @@ function alertOnce(key, title, body, tone) {
 
 function evaluate() {
   const soon = Date.now() + DUE_WINDOW
+  const now = Date.now()
 
   for (const task of overdue.value) {
     alertOnce(
@@ -129,6 +133,20 @@ function evaluate() {
     }
   }
 
+  // Per-task reminders (ring at the chosen time).
+  for (const task of reminded.value) {
+    if (!task.reminderAt) continue
+    const at = new Date(task.reminderAt).getTime()
+    if (at <= now + 60 * 1000) {
+      alertOnce(
+        dayKey('reminder', task.id),
+        `Reminder: ${task.title}`,
+        'Your scheduled reminder is due.',
+        'info',
+      )
+    }
+  }
+
   persistNotified()
 }
 
@@ -137,6 +155,36 @@ async function refresh() {
   const summary = await dashboard.load({ force: true })
   overdue.value = summary?.overdueTasks ?? []
   upcoming.value = summary?.upcoming ?? []
+  try {
+    const tasks = (await api.get('/tasks')) ?? []
+    reminded.value = tasks.filter((t) => t.reminderAt)
+  } catch {
+    reminded.value = []
+  }
+
+  // Clear previously scheduled reminder timers.
+  while (reminderTimers.length) {
+    clearTimeout(reminderTimers.pop())
+  }
+  const now = Date.now()
+  for (const task of reminded.value) {
+    if (!task.reminderAt) continue
+    const at = new Date(task.reminderAt).getTime()
+    const delay = at - now
+    if (delay > 0 && delay <= DUE_WINDOW) {
+      const id = setTimeout(() => {
+        alertOnce(
+          dayKey('reminder', task.id),
+          `Reminder: ${task.title}`,
+          'Your scheduled reminder is due.',
+          'info',
+        )
+        persistNotified()
+      }, delay)
+      reminderTimers.push(id)
+    }
+  }
+
   evaluate()
 }
 
@@ -162,7 +210,15 @@ const dueSoonCount = computed(
       return due <= Date.now() + DUE_WINDOW
     }).length,
 )
-const totalCount = computed(() => overdueCount.value + dueSoonCount.value)
+const reminderCount = computed(
+  () =>
+    reminded.value.filter((t) => {
+      if (!t.reminderAt) return false
+      const at = new Date(t.reminderAt).getTime()
+      return at <= Date.now() + DUE_WINDOW
+    }).length,
+)
+const totalCount = computed(() => overdueCount.value + dueSoonCount.value + reminderCount.value)
 
 export function useReminders() {
   return {

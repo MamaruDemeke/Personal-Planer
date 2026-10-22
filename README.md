@@ -107,6 +107,8 @@ If port 4000 or 5173 is already in use, a stale dev stack is still running. Stop
    - `supabase/migrations/0007_report_periods.sql` — adds `period` to reports (daily/weekly/
      monthly/yearly)
    - `supabase/migrations/0008_personal_diary.sql` — personal diary / notes table
+   - `supabase/migrations/0009_task_reminders_and_work_notes.sql` — per-task reminder
+     timestamp + work notes
 
    > `0001` begins by dropping the app tables so it can be re-run. On an existing project this
    > **resets their data** — intended for the fresh Worker Planner schema.
@@ -153,6 +155,26 @@ All routes are mounted under `/api` and (except health) require
 - **Reminders** are handled by `useReminders` (`client/src/composables/useReminders.js`): it polls
   the dashboard summary every 5 minutes and raises a browser notification + toast for overdue and
   due-soon tasks, once per task per day.
+
+## Mobile app (PWA + native)
+
+The web app is a Progressive Web App: open it in a mobile browser and use
+"Add to Home Screen" / "Install" to run it like a native app. The service
+worker (`client/public/sw.js`) caches the app shell for offline use.
+
+To build a downloadable native app (Android/iOS) with Capacitor:
+
+```bash
+cd client
+npm install @capacitor/core @capacitor/cli @capacitor/android @capacitor/ios
+npx cap init "Worker Planner" com.workerplanner.app --web-dir dist
+npm run build
+npx cap add android
+npx cap sync
+npx cap open android
+```
+
+Then build the APK/AAB from Android Studio. Repeat with `ios` on macOS + Xcode.
 
 ## Scripts
 

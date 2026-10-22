@@ -115,6 +115,8 @@ create table public.tasks (
   plan            public.task_plan not null default 'daily',
   recurrence      public.task_recurrence not null default 'none',
   parent_id       uuid references public.tasks (id) on delete cascade,
+  reminder_at     timestamptz,
+  work_notes      text,
   start_date      timestamptz,
   deadline        timestamptz,
   progress        integer not null default 0 check (progress between 0 and 100),

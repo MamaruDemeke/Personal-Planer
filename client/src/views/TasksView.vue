@@ -136,6 +136,8 @@ const fields = computed(() => [
     ],
   },
   { name: 'description', label: 'Description', type: 'richtext', span: 2, placeholder: 'What needs to be done?' },
+  { name: 'workNotes', label: 'Work notes', type: 'richtext', span: 2, placeholder: 'Notes on the work done...' },
+  { name: 'reminderAt', label: 'Reminder', type: 'datetime' },
   { name: 'categoryId', label: 'Category', type: 'select', options: categoryOptions.value },
   { name: 'priority', label: 'Priority', type: 'select', required: true, default: 'medium', options: TASK_PRIORITIES },
   { name: 'status', label: 'Status', type: 'select', default: 'not_started', options: TASK_STATUSES },

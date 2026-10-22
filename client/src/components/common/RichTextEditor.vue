@@ -25,10 +25,46 @@ const editor = ref(null)
 const fontColor = ref('#111827')
 const fontSize = ref('3')
 
-function exec(cmd, value = null) {
+function ensureSelection() {
   if (!editor.value) return
   editor.value.focus()
-  document.execCommand(cmd, false, value)
+  const sel = window.getSelection()
+  if (!sel || sel.rangeCount === 0 || !editor.value.contains(sel.anchorNode)) {
+    const range = document.createRange()
+    range.selectNodeContents(editor.value)
+    range.collapse(false)
+    sel?.removeAllRanges()
+    sel?.addRange(range)
+  }
+}
+
+function exec(cmd, value = null) {
+  if (!editor.value) return
+  ensureSelection()
+  let ok = false
+  try {
+    ok = document.execCommand(cmd, false, value)
+  } catch {
+    ok = false
+  }
+  if (!ok && (cmd === 'insertUnorderedList' || cmd === 'insertOrderedList')) {
+    // Fallback: insert a list manually at the cursor.
+    const sel = window.getSelection()
+    if (sel && sel.rangeCount) {
+      const range = sel.getRangeAt(0)
+      const list = document.createElement(cmd === 'insertUnorderedList' ? 'ul' : 'ol')
+      const li = document.createElement('li')
+      li.innerHTML = '\u200B'
+      list.appendChild(li)
+      range.deleteContents()
+      range.insertNode(list)
+      const r = document.createRange()
+      r.setStart(li, 0)
+      r.collapse(true)
+      sel.removeAllRanges()
+      sel.addRange(r)
+    }
+  }
   sync()
 }
 
@@ -71,28 +107,28 @@ const fontSizes = [
   <div class="rounded-md border bg-background">
     <!-- Toolbar -->
     <div class="flex flex-wrap items-center gap-1 border-b bg-muted/40 px-2 py-1.5">
-      <Button type="button" variant="ghost" size="icon" class="h-8 w-8" title="Bold" @click="exec('bold')">
+      <Button type="button" variant="ghost" size="icon" class="h-8 w-8" title="Bold" @mousedown.prevent @click="exec('bold')">
         <Bold class="h-4 w-4" />
       </Button>
-      <Button type="button" variant="ghost" size="icon" class="h-8 w-8" title="Italic" @click="exec('italic')">
+      <Button type="button" variant="ghost" size="icon" class="h-8 w-8" title="Italic" @mousedown.prevent @click="exec('italic')">
         <Italic class="h-4 w-4" />
       </Button>
-      <Button type="button" variant="ghost" size="icon" class="h-8 w-8" title="Underline" @click="exec('underline')">
+      <Button type="button" variant="ghost" size="icon" class="h-8 w-8" title="Underline" @mousedown.prevent @click="exec('underline')">
         <Underline class="h-4 w-4" />
       </Button>
 
       <span class="mx-1 h-5 w-px bg-border" />
 
-      <Button type="button" variant="ghost" size="icon" class="h-8 w-8" title="Bullet list" @click="exec('insertUnorderedList')">
+      <Button type="button" variant="ghost" size="icon" class="h-8 w-8" title="Bullet list" @mousedown.prevent @click="exec('insertUnorderedList')">
         <List class="h-4 w-4" />
       </Button>
-      <Button type="button" variant="ghost" size="icon" class="h-8 w-8" title="Numbered list" @click="exec('insertOrderedList')">
+      <Button type="button" variant="ghost" size="icon" class="h-8 w-8" title="Numbered list" @mousedown.prevent @click="exec('insertOrderedList')">
         <ListOrdered class="h-4 w-4" />
       </Button>
-      <Button type="button" variant="ghost" size="icon" class="h-8 w-8" title="Indent" @click="exec('indent')">
+      <Button type="button" variant="ghost" size="icon" class="h-8 w-8" title="Indent" @mousedown.prevent @click="exec('indent')">
         <Indent class="h-4 w-4" />
       </Button>
-      <Button type="button" variant="ghost" size="icon" class="h-8 w-8" title="Outdent" @click="exec('outdent')">
+      <Button type="button" variant="ghost" size="icon" class="h-8 w-8" title="Outdent" @mousedown.prevent @click="exec('outdent')">
         <Outdent class="h-4 w-4" />
       </Button>
 

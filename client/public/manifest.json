@@ -1,0 +1,13 @@
+{
+  "name": "Worker Planner",
+  "short_name": "Worker Planner",
+  "description": "Plan tasks, track progress, and write daily reports.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0d9488",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

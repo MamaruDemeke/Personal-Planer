@@ -18,3 +18,10 @@ await auth.initialize()
 app.use(router)
 
 app.mount('#app')
+
+// Register the service worker for PWA / offline app-shell caching.
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {})
+  })
+}

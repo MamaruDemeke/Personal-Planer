@@ -28,6 +28,8 @@ const baseTask = {
   status: z.enum(STATUSES).optional(),
    plan: z.enum(PLANS).optional(),
    recurrence: z.enum(RECURRENCES).optional(),
+   reminderAt: dateField,
+   workNotes: text(10000),
    parentId: z.union([z.string().uuid(), z.null()]).optional(),
    startDate: dateField,
   deadline: dateField,

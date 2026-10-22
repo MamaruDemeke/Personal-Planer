@@ -53,6 +53,8 @@ export const taskSchema = z
     status: z.enum(TASK_STATUS_VALUES).default('not_started'),
     plan: z.enum(TASK_PLAN_VALUES).default('daily'),
     recurrence: z.enum(TASK_RECURRENCE_VALUES).default('none'),
+    reminderAt: optionalDate,
+    workNotes: optionalText(10000),
     startDate: optionalDate,
     deadline: optionalDate,
     progress: progressValue,
