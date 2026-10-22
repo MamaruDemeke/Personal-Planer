@@ -22,6 +22,8 @@ async function isOurServer() {
       })
       if (res.ok) {
         const body = await res.json()
+        // 'worker-planner-api' is the legacy name, still accepted so an old
+        // server started before the rename can be stopped automatically.
         return body?.data?.service === 'mezgab-api' || body?.data?.service === 'worker-planner-api'
       }
     } catch {
@@ -78,7 +80,7 @@ async function main() {
     process.exit(1)
   }
 
-  console.log(`Port ${port} is held by a previous Worker Planner server; stopping it…`)
+  console.log(`Port ${port} is held by a previous Mezgab server; stopping it…`)
   for (const pid of listeningPids()) killPid(pid)
 
   for (let i = 0; i < 20; i += 1) {

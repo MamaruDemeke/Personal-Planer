@@ -1,5 +1,5 @@
 /**
- * Shared display constants for the Worker Planner.
+ * Shared display constants for Mezgab.
  */
 
 /** A pleasant default swatch palette (used by colour picker fields). */

@@ -239,8 +239,8 @@ async function signOut() {
             <Badge :variant="statusMeta.variant">{{ statusMeta.label }}</Badge>
             <h1 class="text-2xl font-semibold tracking-tight">{{ t('access.verifyPayment') }}</h1>
             <p class="mx-auto max-w-lg text-sm text-muted-foreground">
-              Upload your payment receipt or enter the transaction number. Your planner stays locked
-              until an administrator verifies and approves your account.
+              Upload your payment receipt or enter the transaction number. Your Mezgab account
+              stays locked until an administrator verifies and approves it.
             </p>
           </div>
 
@@ -313,7 +313,7 @@ async function signOut() {
               class="mb-4 rounded-lg border border-warning/30 bg-warning/5 p-3 text-sm"
             >
               <p class="font-medium text-warning-foreground">Your access period has expired</p>
-              <p class="text-muted-foreground">Renew your payment to unlock the planner again.</p>
+              <p class="text-muted-foreground">Renew your payment to unlock Mezgab again.</p>
             </div>
 
             <Card>

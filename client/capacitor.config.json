@@ -1,6 +1,6 @@
 {
-  "appId": "com.workerplanner.app",
-  "appName": "Worker Planner",
+  "appId": "com.mezgab.app",
+  "appName": "Mezgab",
   "webDir": "dist",
   "bundledWebRuntime": false,
   "server": {

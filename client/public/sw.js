@@ -1,4 +1,4 @@
-const CACHE = 'worker-planner-v1'
+const CACHE = 'mezgab-v1'
 const SHELL = ['/', '/index.html', '/favicon.svg', '/manifest.json']
 
 self.addEventListener('install', (e) => {

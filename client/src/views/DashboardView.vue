@@ -55,7 +55,7 @@ const lockInfo = computed(() => {
     case 'revoked':
       return { title: 'Access revoked', message: access.summary?.paymentReviewNote || 'Contact administrator.', icon: ShieldAlert }
     default:
-      return { title: 'Unlock the planner', message: 'Submit payment to unlock.', icon: Lock }
+      return { title: 'Unlock Mezgab', message: 'Submit payment to unlock.', icon: Lock }
   }
 })
 

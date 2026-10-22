@@ -1,5 +1,5 @@
 -- =============================================================================
--- Worker Planner - 0004_admin_delete_user
+-- Mezgab - 0004_admin_delete_user
 -- =============================================================================
 -- Lets an administrator permanently delete an account WITHOUT the server
 -- service-role key. The function is SECURITY DEFINER (runs with the owner's

@@ -12,7 +12,7 @@ router.get('/', (_req, res) => {
   res.json({
     data: {
       status: 'ok',
-      service: 'worker-planner-api',
+      service: 'mezgab-api',
       uptime: process.uptime(),
       timestamp: new Date().toISOString(),
     },

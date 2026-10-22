@@ -1,5 +1,5 @@
 -- =============================================================================
--- Worker Planner - 0008_personal_diary
+-- Mezgab - 0008_personal_diary
 -- =============================================================================
 -- Personal diary / notes: one row per note, owned by the signed-in user.
 -- Run AFTER 0001-0007. Safe to re-run.

@@ -1,5 +1,5 @@
 -- =============================================================================
--- Worker Planner — 0002_row_level_security
+-- Mezgab — 0002_row_level_security
 -- =============================================================================
 -- Row Level Security is the source of truth for data isolation: a user can only
 -- read/write their own rows. The server queries Supabase with the caller's

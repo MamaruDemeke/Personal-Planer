@@ -1,7 +1,7 @@
 -- =============================================================================
--- Worker Planner — 0001_init_schema
+-- Mezgab — 0001_init_schema
 -- =============================================================================
--- Clean schema for the Worker Planner app: profiles, categories, tasks and
+-- Clean schema for the Mezgab app: profiles, categories, tasks and
 -- daily reports. All timestamps are `timestamptz` (UTC).
 --
 -- ⚠️  This script starts by DROPPING the app tables so it can be re-run. That

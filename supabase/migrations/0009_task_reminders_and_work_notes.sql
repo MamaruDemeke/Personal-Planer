@@ -1,5 +1,5 @@
 -- =============================================================================
--- Worker Planner - 0009_task_reminders_and_work_notes
+-- Mezgab - 0009_task_reminders_and_work_notes
 -- =============================================================================
 -- Adds a per-task reminder timestamp (phone/system ring) and a free-form
 -- work-notes field to record progress on a task.

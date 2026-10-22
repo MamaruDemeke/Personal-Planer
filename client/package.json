@@ -1,9 +1,9 @@
 {
-  "name": "worker-planner-client",
+  "name": "mezgab-client",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Worker Planner - Vue 3 + Vite frontend",
+  "description": "Mezgab - Vue 3 + Vite frontend",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

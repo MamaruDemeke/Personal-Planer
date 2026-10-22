@@ -1,5 +1,5 @@
 -- =============================================================================
--- Worker Planner - 0005_task_plan
+-- Mezgab - 0005_task_plan
 -- =============================================================================
 -- Adds the `tasks.plan` planning horizon (daily / weekly / monthly / yearly) to
 -- databases that were created before the plan feature existed.

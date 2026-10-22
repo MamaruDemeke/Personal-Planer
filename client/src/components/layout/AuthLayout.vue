@@ -17,7 +17,7 @@ defineProps({
         >
           <HardHat class="h-5 w-5" />
         </span>
-        <span class="text-gradient text-xl font-bold tracking-tight">Worker Planner</span>
+        <span class="text-gradient text-xl font-bold tracking-tight">Mezgab</span>
       </RouterLink>
 
       <div class="rounded-xl border bg-card/80 p-6 text-card-foreground shadow-sm backdrop-blur-sm sm:p-8">

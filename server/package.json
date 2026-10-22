@@ -1,9 +1,9 @@
 {
-  "name": "worker-planner-server",
+  "name": "mezgab-server",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Worker Planner REST API (Express + Supabase).",
+  "description": "Mezgab REST API (Express + Supabase).",
   "main": "src/server.js",
   "scripts": {
     "predev": "node scripts/free-port.js",

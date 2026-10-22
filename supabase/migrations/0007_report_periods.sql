@@ -1,5 +1,5 @@
 -- =============================================================================
--- Worker Planner - 0007_report_periods
+-- Mezgab - 0007_report_periods
 -- =============================================================================
 -- Adds a `period` (daily / weekly / monthly / yearly) to work reports so a
 -- user can keep one report per planning horizon instead of only daily ones.

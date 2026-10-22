@@ -1,5 +1,5 @@
 -- =============================================================================
--- Worker Planner - 0003_admin_access
+-- Mezgab - 0003_admin_access
 -- =============================================================================
 -- Administrative roles, payment verification and access gating.
 --

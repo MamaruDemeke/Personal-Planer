@@ -45,7 +45,7 @@ function dismiss() {
         <Download class="h-5 w-5" />
       </span>
       <div class="min-w-0 flex-1">
-        <p class="text-sm font-medium">Install Worker Planner</p>
+        <p class="text-sm font-medium">Install Mezgab</p>
         <p class="text-xs text-muted-foreground">Add to your home screen for offline access.</p>
       </div>
       <Button size="sm" @click="install">Install</Button>

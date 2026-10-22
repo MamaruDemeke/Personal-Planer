@@ -1,5 +1,5 @@
 -- =============================================================================
--- Worker Planner - 0006_recurring_and_subtasks
+-- Mezgab - 0006_recurring_and_subtasks
 -- =============================================================================
 -- Adds Todoist-style recurring tasks and sub-tasks on top of the existing
 -- `tasks` table, without touching any existing data.
