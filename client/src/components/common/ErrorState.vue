@@ -15,20 +15,20 @@ defineEmits(['retry'])
   <div
     :class="
       cn(
-        'flex flex-col items-center justify-center gap-4 rounded-xl border border-destructive/20 bg-destructive/5 px-6 py-14 text-center',
+        'flex flex-col items-center justify-center gap-3 rounded-lg border border-destructive/20 bg-destructive/5 px-4 py-8 text-center',
         props.class,
       )
     "
     role="alert"
   >
     <div
-      class="flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10 text-destructive"
+      class="flex h-9 w-9 items-center justify-center rounded-full bg-destructive/10 text-destructive"
     >
-      <AlertTriangle class="h-6 w-6" />
+      <AlertTriangle class="h-4 w-4" />
     </div>
-    <div class="space-y-1">
-      <h3 class="text-base font-semibold">{{ title }}</h3>
-      <p class="mx-auto max-w-sm text-sm text-muted-foreground">{{ description }}</p>
+    <div class="space-y-0.5">
+      <h3 class="text-sm font-semibold">{{ title }}</h3>
+      <p class="mx-auto max-w-sm text-xs text-muted-foreground">{{ description }}</p>
     </div>
     <Button variant="outline" size="sm" @click="$emit('retry')">
       <RotateCw class="h-4 w-4" />

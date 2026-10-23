@@ -12,23 +12,23 @@ const props = defineProps({
   <div
     :class="
       cn(
-        'flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed bg-card/50 px-4 py-10 text-center sm:gap-4 sm:px-6 sm:py-14',
+        'flex flex-col items-center justify-center gap-2.5 rounded-lg border border-dashed bg-card/50 px-4 py-6 text-center sm:gap-3 sm:px-6 sm:py-8',
         props.class,
       )
     "
   >
     <div
-      class="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 to-info/10 text-primary"
+      class="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 to-info/10 text-primary"
     >
       <slot name="icon" />
     </div>
-    <div class="space-y-1">
-      <h3 class="text-base font-semibold">{{ title }}</h3>
-      <p v-if="description" class="mx-auto max-w-sm text-sm text-muted-foreground">
+    <div class="space-y-0.5">
+      <h3 class="text-sm font-semibold">{{ title }}</h3>
+      <p v-if="description" class="mx-auto max-w-sm text-xs text-muted-foreground">
         {{ description }}
       </p>
     </div>
-    <div v-if="$slots.action" class="pt-1">
+    <div v-if="$slots.action" class="pt-0.5">
       <slot name="action" />
     </div>
   </div>

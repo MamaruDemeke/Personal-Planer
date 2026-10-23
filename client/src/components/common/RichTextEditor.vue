@@ -1,5 +1,5 @@
-<script setup>
-import { ref, watch, onMounted } from 'vue'
+﻿<script setup>
+import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
 import {
   Bold,
   Italic,
@@ -105,29 +105,60 @@ function selectedLines() {
 function placeCaret(el, atEnd = false) {
   const sel = getSelection()
   if (!sel || !el) return
+  editor.value?.focus()
   const range = document.createRange()
   range.selectNodeContents(el)
   range.collapse(!atEnd)
   sel.removeAllRanges()
   sel.addRange(range)
-  editor.value?.focus()
+  savedRange = range.cloneRange()
+}
+
+/**
+ * The toolbar contains native controls (font size, colour) that steal focus.
+ * Remember the last range inside the editor so a command can still apply to it.
+ */
+let savedRange = null
+
+function captureSelection() {
+  const root = editor.value
+  const sel = getSelection()
+  if (!root || !sel || !sel.rangeCount) return
+  const range = sel.getRangeAt(0)
+  if (root.contains(range.commonAncestorContainer)) {
+    savedRange = range.cloneRange()
+  }
 }
 
 function ensureSelection() {
   if (!editor.value) return
-  const sel = getSelection()
-  const inside =
+  const root = editor.value
+  const sel = window.getSelection()
+  const current = sel && sel.rangeCount ? sel.getRangeAt(0) : null
+
+  if (current && root.contains(current.commonAncestorContainer)) {
+    savedRange = current.cloneRange()
+    return
+  }
+
+  if (
     sel &&
-    sel.rangeCount &&
-    editor.value.contains(sel.rangeCount ? sel.getRangeAt(0).commonAncestorContainer : null)
-  if (inside) return
-  editor.value.focus()
+    savedRange &&
+    root.contains(savedRange.startContainer) &&
+    root.contains(savedRange.endContainer)
+  ) {
+    root.focus()
+    sel.removeAllRanges()
+    sel.addRange(savedRange)
+    return
+  }
+
+  root.focus()
   const range = document.createRange()
-  range.selectNodeContents(editor.value)
+  range.selectNodeContents(root)
   range.collapse(false)
-  const s = window.getSelection()
-  s?.removeAllRanges()
-  s?.addRange(range)
+  sel?.removeAllRanges()
+  sel?.addRange(range)
 }
 
 /* ------------------------------------------------------------------ */
@@ -138,9 +169,7 @@ function ensureSelection() {
 function toListItem(line) {
   const li = document.createElement('li')
   while (line.firstChild) li.appendChild(line.firstChild)
-  if (!li.textContent.trim() && !li.querySelector('img, video, iframe')) {
-    li.appendChild(document.createElement('br'))
-  }
+  if (!li.firstChild) li.appendChild(document.createElement('br'))
   return li
 }
 
@@ -203,12 +232,11 @@ function buildList(lines, type) {
     }
   }
 
-  // Continue on a new line: add an empty item and put the caret in it.
+  // Put the caret right after the last bullet/number so the user can simply
+  // start typing. Enter then continues the list with the next marker.
   const lastList = created[created.length - 1]
-  const newItem = document.createElement('li')
-  newItem.appendChild(document.createElement('br'))
-  lastList.appendChild(newItem)
-  placeCaret(newItem)
+  const lastItem = lastList.lastElementChild
+  if (lastItem) placeCaret(lastItem, true)
 }
 
 /** Turn lists back into normal paragraphs (used to toggle a list off). */
@@ -221,9 +249,7 @@ function unwrapLists(lists) {
       if (li.tagName !== 'LI') continue
       const p = document.createElement('p')
       while (li.firstChild) p.appendChild(li.firstChild)
-      if (!p.textContent.trim() && !p.querySelector('img, video, iframe')) {
-        p.appendChild(document.createElement('br'))
-      }
+      if (!p.firstChild) p.appendChild(document.createElement('br'))
       parent.insertBefore(p, list)
       paragraphs.push(p)
     }
@@ -349,6 +375,22 @@ function onKeydown(e) {
   if (!line || line.tagName !== 'LI') return
 
   e.preventDefault()
+  const list = line.parentElement
+  const isEmpty = !line.textContent.trim() && !line.querySelector('img, video, iframe')
+  const isLast = !line.nextElementSibling
+
+  // Word-like: Enter on the last empty item ends the list.
+  if (isEmpty && isLast) {
+    const p = document.createElement('p')
+    p.appendChild(document.createElement('br'))
+    list.parentNode.insertBefore(p, list.nextSibling)
+    line.remove()
+    if (!list.querySelector('li')) list.remove()
+    placeCaret(p)
+    sync()
+    return
+  }
+
   const tail = document.createRange()
   tail.setStart(range.startContainer, range.startOffset)
   tail.setEnd(line, line.childNodes.length)
@@ -357,17 +399,15 @@ function onKeydown(e) {
   const next = document.createElement('li')
   next.appendChild(fragment)
   if (!next.textContent.trim() && !next.querySelector('img, video, iframe')) {
-    next.appendChild(document.createElement('br'))
+    next.innerHTML = '<br>'
   }
   line.after(next)
-  if (!line.textContent.trim() && !line.querySelector('img, video, iframe')) {
-    line.innerHTML = '<br>'
-  }
+  if (!line.childNodes.length) line.appendChild(document.createElement('br'))
   placeCaret(next)
   sync()
 }
 
-/** Remove empty list items when the editor loses focus. */
+/** Remove empty list items / lists when the editor loses focus. */
 function onBlur() {
   const root = editor.value
   if (!root) return
@@ -375,6 +415,12 @@ function onBlur() {
   for (const li of Array.from(root.querySelectorAll('li'))) {
     if (!li.textContent.trim() && !li.querySelector('img, video, iframe')) {
       li.remove()
+      changed = true
+    }
+  }
+  for (const list of Array.from(root.querySelectorAll('ul, ol'))) {
+    if (!list.querySelector('li')) {
+      list.remove()
       changed = true
     }
   }
@@ -393,6 +439,16 @@ watch(
 
 onMounted(() => {
   if (editor.value && props.modelValue) editor.value.innerHTML = props.modelValue
+  try {
+    document.execCommand('defaultParagraphSeparator', false, 'p')
+  } catch {
+    /* Not supported - ignore. */
+  }
+  document.addEventListener('selectionchange', captureSelection)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('selectionchange', captureSelection)
 })
 
 const fontSizes = [
@@ -407,31 +463,31 @@ const fontSizes = [
   <div class="rounded-md border bg-background">
     <!-- Toolbar -->
     <div class="flex flex-wrap items-center gap-1 border-b bg-muted/40 px-2 py-1.5">
-      <Button type="button" variant="ghost" size="icon" class="h-8 w-8" title="Bold" @mousedown.prevent @click="exec('bold')">
+      <Button type="button" variant="ghost" size="icon" class="h-8 w-8" title="Bold" @click="exec('bold')">
         <Bold class="h-4 w-4" />
       </Button>
-      <Button type="button" variant="ghost" size="icon" class="h-8 w-8" title="Italic" @mousedown.prevent @click="exec('italic')">
+      <Button type="button" variant="ghost" size="icon" class="h-8 w-8" title="Italic" @click="exec('italic')">
         <Italic class="h-4 w-4" />
       </Button>
-      <Button type="button" variant="ghost" size="icon" class="h-8 w-8" title="Underline" @mousedown.prevent @click="exec('underline')">
+      <Button type="button" variant="ghost" size="icon" class="h-8 w-8" title="Underline" @click="exec('underline')">
         <Underline class="h-4 w-4" />
       </Button>
 
       <span class="mx-1 h-5 w-px bg-border" />
 
-      <Button type="button" variant="ghost" size="icon" class="h-8 w-8" title="Bullet list" @mousedown.prevent @click="toggleList('ul')">
+      <Button type="button" variant="ghost" size="icon" class="h-8 w-8" title="Bullet list" @click="toggleList('ul')">
         <List class="h-4 w-4" />
       </Button>
-      <Button type="button" variant="ghost" size="icon" class="h-8 w-8" title="Numbered list" @mousedown.prevent @click="toggleList('ol')">
+      <Button type="button" variant="ghost" size="icon" class="h-8 w-8" title="Numbered list" @click="toggleList('ol')">
         <ListOrdered class="h-4 w-4" />
       </Button>
-      <Button type="button" variant="ghost" size="icon" class="h-8 w-8" title="Indent" @mousedown.prevent @click="exec('indent')">
+      <Button type="button" variant="ghost" size="icon" class="h-8 w-8" title="Indent" @click="exec('indent')">
         <Indent class="h-4 w-4" />
       </Button>
-      <Button type="button" variant="ghost" size="icon" class="h-8 w-8" title="Outdent" @mousedown.prevent @click="exec('outdent')">
+      <Button type="button" variant="ghost" size="icon" class="h-8 w-8" title="Outdent" @click="exec('outdent')">
         <Outdent class="h-4 w-4" />
       </Button>
-      <Button type="button" variant="ghost" size="icon" class="h-8 w-8" title="Gap (space between items)" @mousedown.prevent @click="insertGap">
+      <Button type="button" variant="ghost" size="icon" class="h-8 w-8" title="Gap (space between items)" @click="insertGap">
         <MoveVertical class="h-4 w-4" />
       </Button>
 
@@ -468,18 +524,41 @@ const fontSizes = [
 </template>
 
 <style scoped>
+[contenteditable='true'] {
+  overflow-wrap: anywhere;
+}
+
 [contenteditable='true']:empty:before {
   content: attr(data-placeholder);
   color: var(--muted-foreground);
   pointer-events: none;
 }
 
-[contenteditable='true'] ul,
-[contenteditable='true'] ol {
-  padding-left: 1.5rem;
-}
-
-[contenteditable='true'] li {
+/* Lists are created in JavaScript, so they need :deep() to receive styles. */
+[contenteditable='true'] :deep(p) {
   margin: 0.15rem 0;
 }
+
+[contenteditable='true'] :deep(ul) {
+  list-style: disc outside;
+  padding-left: 1.4rem;
+  margin: 0.25rem 0;
+}
+
+[contenteditable='true'] :deep(ol) {
+  list-style: decimal outside;
+  padding-left: 1.6rem;
+  margin: 0.25rem 0;
+}
+
+[contenteditable='true'] :deep(li) {
+  margin: 0.05rem 0;
+  padding-left: 0.15rem;
+}
+
+[contenteditable='true'] :deep(li::marker) {
+  color: var(--primary);
+  font-weight: 600;
+}
 </style>
+

@@ -40,8 +40,8 @@ describe('RichTextEditor lists', () => {
     expect(html).toContain('<ol>')
     expect(html).toContain('<li>first</li>')
     expect(html).toContain('<li>second</li>')
-    // A new empty item is added so the user can continue on a new line.
-    expect(editorOf(wrapper).querySelectorAll('li')).toHaveLength(3)
+    // No stray empty item: the caret lands after the number so the user can type.
+    expect(editorOf(wrapper).querySelectorAll('li')).toHaveLength(2)
   })
 
   it('turns the selected text into a bullet list', async () => {
@@ -83,8 +83,64 @@ describe('RichTextEditor lists', () => {
   })
 })
 
-describe('RichTextEditor gap', () => {
-  it('keeps the numbering continuous across a gap', async () => {
+describe('RichTextEditor Word-like lists', () => {
+  function caretAt(node, offset) {
+    const range = document.createRange()
+    range.setStart(node, offset)
+    range.collapse(true)
+    const sel = window.getSelection()
+    sel.removeAllRanges()
+    sel.addRange(range)
+  }
+
+  function pressEnter(wrapper) {
+    editorOf(wrapper).dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }),
+    )
+  }
+
+  it('creates a single empty numbered item when the editor is empty', async () => {
+    const wrapper = mountEditor('')
+    await wrapper.vm.$nextTick()
+
+    clickButton(wrapper, 'Numbered list')
+
+    const editor = editorOf(wrapper)
+    expect(editor.querySelectorAll('ol li')).toHaveLength(1)
+    expect(editor.querySelector('ol li').innerHTML).toBe('<br>')
+  })
+
+  it('Enter continues the numbering in a new item', async () => {
+    const wrapper = mountEditor('<ol><li>one</li></ol>')
+    await wrapper.vm.$nextTick()
+
+    const first = editorOf(wrapper).querySelector('li')
+    caretAt(first.firstChild, first.firstChild.length)
+    pressEnter(wrapper)
+    await wrapper.vm.$nextTick()
+
+    const items = editorOf(wrapper).querySelectorAll('ol li')
+    expect(items).toHaveLength(2)
+    expect(items[0].textContent).toBe('one')
+    expect(items[1].innerHTML).toBe('<br>')
+  })
+
+  it('Enter on the last empty item ends the list', async () => {
+    const wrapper = mountEditor('<ol><li>one</li><li><br></li></ol>')
+    await wrapper.vm.$nextTick()
+
+    const items = editorOf(wrapper).querySelectorAll('li')
+    caretAt(items[1], 0)
+    pressEnter(wrapper)
+    await wrapper.vm.$nextTick()
+
+    const editor = editorOf(wrapper)
+    expect(editor.querySelectorAll('ol li')).toHaveLength(1)
+    expect(editor.querySelector('ol').nextElementSibling?.tagName).toBe('P')
+  })
+})
+
+describe('RichTextEditor gap', () => {  it('keeps the numbering continuous across a gap', async () => {
     const wrapper = mountEditor('<ol><li>one</li><li>two</li><li>three</li></ol>')
     await wrapper.vm.$nextTick()
 

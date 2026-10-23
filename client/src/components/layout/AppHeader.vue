@@ -53,24 +53,24 @@ async function onSignOut() {
 
 <template>
   <header
-    class="sticky top-0 z-30 flex h-14 items-center gap-1.5 border-b bg-background/90 px-2.5 backdrop-blur-md pt-[env(safe-area-inset-top)] sm:h-16 sm:gap-2 sm:px-5 lg:px-8"
+    class="sticky top-0 z-30 flex h-12 items-center gap-1.5 border-b bg-background/90 px-2 backdrop-blur-md pt-[env(safe-area-inset-top)] sm:h-14 sm:gap-2 sm:px-4 lg:px-6"
   >
     <button
       type="button"
-      class="rounded-md p-2 text-muted-foreground transition-colors hover:bg-accent lg:hidden"
+      class="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent lg:hidden"
       aria-label="Open menu"
       @click="emit('toggle-sidebar')"
     >
-      <Menu class="h-5 w-5" />
+      <Menu class="h-4 w-4" />
     </button>
 
     <form class="relative w-full max-w-sm" role="search" @submit.prevent="onSearch">
-      <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+      <Search class="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
       <Input
         v-model="search"
         type="search"
         :placeholder="t('header.search')"
-        class="pl-9"
+        class="h-8 pl-8"
         aria-label="Search tasks"
       />
     </form>
@@ -98,8 +98,8 @@ async function onSignOut() {
         :aria-label="isDark ? 'Switch to light theme' : 'Switch to dark theme'"
         @click="toggleTheme()"
       >
-        <Sun v-if="isDark" class="h-5 w-5" />
-        <Moon v-else class="h-5 w-5" />
+        <Sun v-if="isDark" class="h-4 w-4" />
+        <Moon v-else class="h-4 w-4" />
       </Button>
 
       <DropdownMenu>

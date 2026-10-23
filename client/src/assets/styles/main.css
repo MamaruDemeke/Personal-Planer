@@ -165,6 +165,9 @@
   }
 
   html {
+    /* Compact scale: every rem-based size (text, padding, gaps, icons)
+       shrinks together so more content fits on one page. */
+    font-size: 14px;
     scroll-behavior: smooth;
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
@@ -173,6 +176,7 @@
 
   body {
     min-height: 100dvh;
+    line-height: 1.45;
     background-color: var(--color-background);
     background-image:
       radial-gradient(

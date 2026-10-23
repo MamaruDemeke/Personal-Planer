@@ -9,8 +9,8 @@ const props = defineProps({
 </script>
 
 <template>
-  <div :class="cn('space-y-3', props.class)" role="status" aria-busy="true">
-    <span class="sr-only">Loading…</span>
-    <Skeleton v-for="i in rows" :key="i" class="h-12 w-full" />
+  <div :class="cn('space-y-2', props.class)" role="status" aria-busy="true">
+    <span class="sr-only">Loading�?�</span>
+    <Skeleton v-for="i in rows" :key="i" class="h-9 w-full" />
   </div>
 </template>

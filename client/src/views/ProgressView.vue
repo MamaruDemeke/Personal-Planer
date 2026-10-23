@@ -287,7 +287,7 @@ function lateLabel(row) {
 
     <div
       v-else-if="progress.loading"
-      class="flex items-center justify-center py-16 text-muted-foreground"
+      class="flex items-center justify-center py-10 text-muted-foreground"
     >
       <Loader2 class="h-5 w-5 animate-spin" />
     </div>

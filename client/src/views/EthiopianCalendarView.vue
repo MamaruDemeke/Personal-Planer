@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button'
 import { useI18n } from '@/lib/i18n'
 import {
   gregorianToEthiopian,
-  ethiopianToGregorian,
   ETHIOPIAN_MONTHS,
   ETHIOPIAN_MONTHS_AMHARIC,
   daysInEthiopianMonth,
@@ -30,29 +29,6 @@ const days = computed(() => {
   const total = daysInEthiopianMonth(viewYear.value, viewMonth.value)
   return Array.from({ length: total }, (_, i) => i + 1)
 })
-
-// Major Orthodox Tewahdo feasts (Ethiopian month/day) with descriptions.
-const feasts = [
-  { m: 1, d: 1, name: 'Enkutatash (Ethiopian New Year)', note: 'Beginning of the year; spring renewal.' },
-  { m: 1, d: 17, name: 'Meskel', note: 'Finding of the True Cross — major festival with Demera bonfire.' },
-  { m: 3, d: 29, name: 'Genna (Ethiopian Christmas)', note: 'Birth of Christ; celebrated Jan 7 Gregorian.' },
-  { m: 4, d: 11, name: 'Timkat (Epiphany)', note: 'Baptism of Christ; tabots carried to water.' },
-  { m: 5, d: 11, name: 'Kana Ze-Gelila', note: 'Turning water into wine at Cana.' },
-  { m: 6, d: 12, name: 'Hosanna (Palm Sunday)', note: 'Entry of Christ into Jerusalem.' },
-  { m: 7, d: 19, name: 'Siklet (Good Friday)', note: 'Crucifixion of Christ.' },
-  { m: 7, d: 21, name: 'Tensae (Easter / Fasika)', note: 'Resurrection of Christ.' },
-  { m: 8, d: 20, name: 'Rapture / Ascension', note: 'Ascension of Christ.' },
-  { m: 9, d: 4, name: 'Pentecost (Paraclete)', note: 'Descent of the Holy Spirit.' },
-  { m: 11, d: 7, name: 'Kidane (Covenant of Mercy)', note: 'St. Mary — feast of the Covenant.' },
-  { m: 12, d: 16, name: 'Filseta (Assumption of St. Mary)', note: 'Dormition and Assumption of the Virgin Mary.' },
-]
-
-const feastsThisMonth = computed(() =>
-  feasts.filter((f) => f.m === viewMonth.value).map((f) => ({
-    ...f,
-    gregorian: ethiopianToGregorian(viewYear.value, f.m, f.d).toLocaleDateString(),
-  })),
-)
 
 function prevMonth() {
   if (viewMonth.value === 1) { viewMonth.value = 13; viewYear.value -= 1 } else viewMonth.value -= 1
@@ -88,7 +64,7 @@ function goToday() {
       <CardContent class="flex flex-col gap-1 py-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p class="text-xs uppercase tracking-wide text-muted-foreground">{{ t('eth.todayEthiopian') }}</p>
-          <p class="text-2xl font-bold text-primary">
+          <p class="text-lg font-bold text-primary">
             {{ ethToday.day }} {{ ETHIOPIAN_MONTHS[ethToday.month - 1] }} {{ ethToday.year }}
           </p>
           <p class="text-xs text-muted-foreground">{{ ETHIOPIAN_MONTHS_AMHARIC[ethToday.month - 1] }}</p>
@@ -146,29 +122,6 @@ function goToday() {
           {{ isEthiopianLeapYear(viewYear) ? 'Leap year (Pagume has 6 days).' : 'Pagume has 5 days.' }}
           Click a day to open the Synaxarium (Senksar).
         </p>
-      </CardContent>
-    </Card>
-
-    <!-- Feasts this month -->
-    <Card>
-      <CardHeader class="pb-2">
-        <CardTitle class="text-base">{{ t('eth.feastsThisMonth') }}</CardTitle>
-      </CardHeader>
-      <CardContent class="space-y-2">
-        <div v-if="!feastsThisMonth.length" class="py-4 text-center text-sm text-muted-foreground">
-          No major feasts this month.
-        </div>
-        <div
-          v-for="f in feastsThisMonth"
-          :key="f.name"
-          class="rounded-md border bg-card px-3 py-2"
-        >
-          <div class="flex items-center justify-between">
-            <p class="text-sm font-medium">{{ f.name }}</p>
-            <span class="text-xs text-muted-foreground">{{ f.d }} {{ monthName }} · {{ f.gregorian }}</span>
-          </div>
-          <p class="text-xs text-muted-foreground">{{ f.note }}</p>
-        </div>
       </CardContent>
     </Card>
 

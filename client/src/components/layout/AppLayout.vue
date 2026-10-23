@@ -46,21 +46,21 @@ function goToPayment() {
 
     <div class="lg:pl-64">
       <AppHeader @toggle-sidebar="sidebarOpen = !sidebarOpen" />
-      <main class="px-3 py-4 pb-20 sm:px-5 sm:py-6 sm:pb-24 lg:px-8 lg:pb-6">
-        <div class="mx-auto w-full max-w-6xl space-y-4 sm:space-y-6">
+      <main class="px-3 py-3 pb-20 sm:px-4 sm:py-4 sm:pb-20 lg:px-6 lg:pb-4">
+        <div class="mx-auto w-full max-w-5xl space-y-3 sm:space-y-4">
           <div
             v-if="locked"
-            class="flex flex-col gap-3 rounded-lg border border-warning/40 bg-warning/5 p-3 sm:flex-row sm:items-center sm:justify-between"
+            class="flex flex-col gap-2 rounded-lg border border-warning/40 bg-warning/5 p-2.5 sm:flex-row sm:items-center sm:justify-between"
           >
-            <div class="flex items-start gap-3">
+            <div class="flex items-start gap-2.5">
               <span
-                class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-warning/15 text-warning-foreground"
+                class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-warning/15 text-warning-foreground"
               >
                 <Lock class="h-4 w-4" />
               </span>
               <div class="space-y-0.5">
                 <p class="text-sm font-medium">Account locked — read-only</p>
-                <p class="text-sm text-muted-foreground">{{ lockMessage }}</p>
+                <p class="text-xs text-muted-foreground">{{ lockMessage }}</p>
               </div>
             </div>
             <Button size="sm" class="shrink-0" @click="goToPayment">

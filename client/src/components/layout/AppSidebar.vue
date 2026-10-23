@@ -41,33 +41,33 @@ const sections = computed(() => buildNavSections({ isAdmin: access.isAdmin, lock
     "
     aria-label="Primary"
   >
-    <div class="flex h-14 items-center gap-2.5 border-b border-blue-200 px-4 sm:h-16">
+    <div class="flex h-12 items-center gap-2 border-b border-blue-200 px-3 sm:h-14">
       <span
-        class="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-info text-primary-foreground shadow-sm shadow-primary/30"
+        class="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-info text-primary-foreground shadow-sm shadow-primary/30"
       >
-        <HardHat class="h-5 w-5" />
+        <HardHat class="h-4 w-4" />
       </span>
-      <span class="text-lg font-bold tracking-tight text-slate-900">{{ t('app.title') }}</span>
+      <span class="text-base font-bold tracking-tight text-slate-900">{{ t('app.title') }}</span>
       <button
         type="button"
         class="ml-auto rounded-md p-1.5 text-slate-700 transition-colors hover:bg-blue-200/60 lg:hidden"
         aria-label="Close menu"
         @click="emit('close')"
       >
-        <X class="h-5 w-5" />
+        <X class="h-4 w-4" />
       </button>
     </div>
 
-    <nav class="flex-1 space-y-5 overflow-y-auto px-3 py-4">
-      <div v-for="section in sections" :key="section.title" class="space-y-1">
-        <p class="px-3 text-xs font-semibold uppercase tracking-wider text-blue-700">
+    <nav class="flex-1 space-y-3.5 overflow-y-auto px-2.5 py-3">
+      <div v-for="section in sections" :key="section.title" class="space-y-0.5">
+        <p class="px-2.5 text-[10px] font-semibold uppercase tracking-wider text-blue-700">
           {{ t(section.title) }}
         </p>
         <RouterLink
           v-for="item in section.items"
           :key="item.label"
           :to="item.to"
-          class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-800 transition-colors hover:bg-blue-200/60 hover:text-slate-900"
+          class="flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] font-medium text-slate-800 transition-colors hover:bg-blue-200/60 hover:text-slate-900"
           active-class="bg-gradient-to-r from-blue-400/40 to-indigo-400/40 text-blue-900 font-semibold shadow-sm border-l-4 border-blue-600"
           @click="emit('close')"
         >

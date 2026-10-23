@@ -27,27 +27,27 @@ const tone = computed(() => TONES[props.tone] ?? TONES.primary)
 
 <template>
   <Card class="card-hover border-l-4" :style="{ borderLeftColor: tone.bar }">
-    <CardContent class="p-4 sm:p-5">
-      <div class="flex items-center gap-4">
+    <CardContent class="p-2.5 sm:p-3">
+      <div class="flex items-center gap-2.5">
         <span
           v-if="icon"
-          :class="cn('flex h-12 w-12 shrink-0 items-center justify-center rounded-md', tone.chip)"
+          :class="cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-md', tone.chip)"
         >
-          <component :is="icon" class="h-6 w-6" />
+          <component :is="icon" class="h-4 w-4" />
         </span>
-        <div class="min-w-0 flex-1 space-y-1">
-          <p class="text-[14px] font-medium uppercase tracking-wide text-muted-foreground sm:text-[15px]">
+        <div class="min-w-0 flex-1 space-y-0.5">
+          <p class="truncate text-[10px] font-semibold uppercase tracking-wide text-muted-foreground sm:text-[11px]">
             {{ label }}
           </p>
-          <div class="flex items-baseline gap-2">
-            <p class="text-2xl font-semibold leading-none tabular-nums sm:text-3xl">{{ value }}</p>
-            <p v-if="hint" class="text-[13px] text-muted-foreground sm:text-[14px]">{{ hint }}</p>
+          <div class="flex items-baseline gap-1.5">
+            <p class="text-lg font-semibold leading-none tabular-nums sm:text-xl">{{ value }}</p>
+            <p v-if="hint" class="truncate text-[10px] text-muted-foreground sm:text-[11px]">{{ hint }}</p>
           </div>
         </div>
       </div>
       <Progress
         v-if="progress !== null"
-        class="mt-3 h-2"
+        class="mt-2 h-1.5"
         :model-value="progress"
         :indicator-style="{ backgroundColor: tone.bar }"
       />

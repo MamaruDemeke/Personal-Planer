@@ -111,38 +111,38 @@ function goToPayment() {
 
       <!-- Overall progress -->
       <Card>
-        <CardContent class="flex items-center gap-3 py-3">
-          <Target class="h-5 w-5 shrink-0 text-primary" />
+        <CardContent class="flex items-center gap-2.5 py-2.5">
+          <Target class="h-4 w-4 shrink-0 text-primary" />
           <div class="min-w-0 flex-1">
-            <div class="mb-1 flex items-center justify-between text-xs">
+            <div class="mb-1 flex items-center justify-between text-[11px]">
               <span class="font-medium">{{ t('dash.overallCompletion') }}</span>
               <span class="text-muted-foreground">{{ t('dash.avg') }} {{ s.avgProgress }}%</span>
             </div>
-            <Progress :model-value="s.completionRate" class="h-2" :indicator-style="{ backgroundColor: '#0d9488' }" />
+            <Progress :model-value="s.completionRate" class="h-1.5" :indicator-style="{ backgroundColor: '#0d9488' }" />
           </div>
-          <span class="text-lg font-bold tabular-nums text-primary">{{ s.completionRate }}%</span>
+          <span class="text-base font-bold tabular-nums text-primary">{{ s.completionRate }}%</span>
         </CardContent>
       </Card>
 
       <!-- Charts -->
       <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <Card>
-          <CardHeader class="p-3 pb-1">
-            <CardTitle class="flex items-center gap-1.5 text-sm">
+          <CardHeader class="p-2.5 pb-0.5">
+            <CardTitle class="flex items-center gap-1.5 text-xs">
               <ListChecks class="h-3.5 w-3.5 text-info" /> {{ t('dash.byStatus') }}
             </CardTitle>
           </CardHeader>
-          <CardContent class="p-3 pt-0">
+          <CardContent class="p-2.5 pt-0">
             <TaskStatusChart :by-status="s.byStatus" />
           </CardContent>
         </Card>
         <Card>
-          <CardHeader class="p-3 pb-1">
-            <CardTitle class="flex items-center gap-1.5 text-sm">
+          <CardHeader class="p-2.5 pb-0.5">
+            <CardTitle class="flex items-center gap-1.5 text-xs">
               <Flame class="h-3.5 w-3.5 text-warning" /> {{ t('dash.byPriority') }}
             </CardTitle>
           </CardHeader>
-          <CardContent class="p-3 pt-0">
+          <CardContent class="p-2.5 pt-0">
             <TaskPriorityChart :by-priority="s.byPriority" />
           </CardContent>
         </Card>
@@ -151,17 +151,17 @@ function goToPayment() {
       <!-- Lists -->
       <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <Card>
-          <CardHeader class="p-3 pb-1">
-            <CardTitle class="flex items-center gap-1.5 text-sm">
+          <CardHeader class="p-2.5 pb-0.5">
+            <CardTitle class="flex items-center gap-1.5 text-xs">
               <TrendingUp class="h-3.5 w-3.5 text-primary" /> {{ t('dash.upcoming') }}
             </CardTitle>
           </CardHeader>
-          <CardContent class="space-y-1 p-3 pt-0">
-            <div v-if="!(s.upcoming?.length)" class="py-3 text-center text-xs text-muted-foreground">{{ t('dash.nothingDue') }}</div>
+          <CardContent class="space-y-1 p-2.5 pt-0">
+            <div v-if="!(s.upcoming?.length)" class="py-2 text-center text-[11px] text-muted-foreground">{{ t('dash.nothingDue') }}</div>
             <div
-              v-for="t in (s.upcoming ?? []).slice(0, 4)"
+              v-for="t in (s.upcoming ?? []).slice(0, 3)"
               :key="t.id"
-              class="flex items-center justify-between rounded border px-2 py-1 text-xs"
+              class="flex items-center justify-between rounded border px-2 py-1 text-[11px]"
             >
               <span class="truncate font-medium">{{ t.title }}</span>
               <span class="shrink-0 text-muted-foreground">{{ new Date(t.deadline).toLocaleDateString() }}</span>
@@ -169,17 +169,17 @@ function goToPayment() {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader class="p-3 pb-1">
-            <CardTitle class="flex items-center gap-1.5 text-sm">
+          <CardHeader class="p-2.5 pb-0.5">
+            <CardTitle class="flex items-center gap-1.5 text-xs">
               <AlertTriangle class="h-3.5 w-3.5 text-destructive" /> {{ t('dash.overdueList') }}
             </CardTitle>
           </CardHeader>
-          <CardContent class="space-y-1 p-3 pt-0">
-            <div v-if="!(s.overdueTasks?.length)" class="py-3 text-center text-xs text-muted-foreground">{{ t('dash.noOverdue') }}</div>
+          <CardContent class="space-y-1 p-2.5 pt-0">
+            <div v-if="!(s.overdueTasks?.length)" class="py-2 text-center text-[11px] text-muted-foreground">{{ t('dash.noOverdue') }}</div>
             <div
-              v-for="t in (s.overdueTasks ?? []).slice(0, 4)"
+              v-for="t in (s.overdueTasks ?? []).slice(0, 3)"
               :key="t.id"
-              class="flex items-center justify-between rounded border border-destructive/30 bg-destructive/5 px-2 py-1 text-xs"
+              class="flex items-center justify-between rounded border border-destructive/30 bg-destructive/5 px-2 py-1 text-[11px]"
             >
               <span class="truncate font-medium">{{ t.title }}</span>
               <span class="shrink-0 text-destructive">{{ new Date(t.deadline).toLocaleDateString() }}</span>

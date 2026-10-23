@@ -36,8 +36,12 @@ const options = {
   maintainAspectRatio: false,
   plugins: { legend: { display: false } },
   scales: {
-    y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: 'rgba(148,163,184,0.2)' } },
-    x: { grid: { display: false } },
+    y: {
+      beginAtZero: true,
+      ticks: { precision: 0, font: { size: 10 } },
+      grid: { color: 'rgba(148,163,184,0.2)' },
+    },
+    x: { grid: { display: false }, ticks: { font: { size: 10 } } },
   },
 }
 
@@ -47,7 +51,7 @@ const isEmpty = computed(() =>
 </script>
 
 <template>
-  <div class="h-64">
+  <div class="h-44">
     <EmptyState
       v-if="isEmpty"
       title="No tasks yet"

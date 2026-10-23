@@ -41,7 +41,13 @@ const options = {
   plugins: {
     legend: {
       position: 'bottom',
-      labels: { boxWidth: 12, boxHeight: 12, padding: 14, usePointStyle: true },
+      labels: {
+        boxWidth: 9,
+        boxHeight: 9,
+        padding: 8,
+        usePointStyle: true,
+        font: { size: 10 },
+      },
     },
   },
 }
@@ -52,7 +58,7 @@ const isEmpty = computed(() =>
 </script>
 
 <template>
-  <div class="h-64">
+  <div class="h-44">
     <EmptyState
       v-if="isEmpty"
       title="No tasks yet"

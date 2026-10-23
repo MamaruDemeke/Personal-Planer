@@ -189,8 +189,8 @@ async function signOut() {
       </Button>
     </header>
 
-    <main class="mx-auto w-full max-w-2xl flex-1 px-4 py-8 sm:py-12">
-      <div v-if="loading" class="flex items-center justify-center py-20 text-muted-foreground">
+    <main class="mx-auto w-full max-w-2xl flex-1 px-4 py-5 sm:py-8">
+      <div v-if="loading" class="flex items-center justify-center py-10 text-muted-foreground">
         <Loader2 class="mr-2 h-5 w-5 animate-spin" />
         Checking your access…
       </div>
@@ -205,7 +205,7 @@ async function signOut() {
       <template v-else>
         <!-- Approved / administrator -->
         <Card v-if="approved">
-          <CardContent class="flex flex-col items-center gap-4 py-12 text-center">
+          <CardContent class="flex flex-col items-center gap-3 py-6 text-center">
             <div
               class="flex h-14 w-14 items-center justify-center rounded-full bg-success/10 text-success"
             >
@@ -237,7 +237,7 @@ async function signOut() {
 
           <div class="mb-6 space-y-2 text-center">
             <Badge :variant="statusMeta.variant">{{ statusMeta.label }}</Badge>
-            <h1 class="text-2xl font-semibold tracking-tight">{{ t('access.verifyPayment') }}</h1>
+            <h1 class="text-lg font-semibold tracking-tight">{{ t('access.verifyPayment') }}</h1>
             <p class="mx-auto max-w-lg text-sm text-muted-foreground">
               Upload your payment receipt or enter the transaction number. Your Mezgab account
               stays locked until an administrator verifies and approves it.
@@ -246,7 +246,7 @@ async function signOut() {
 
           <!-- Revoked -->
           <Card v-if="revoked" class="border-destructive/30">
-            <CardContent class="flex flex-col items-center gap-3 py-10 text-center">
+            <CardContent class="flex flex-col items-center gap-2 py-6 text-center">
               <div
                 class="flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10 text-destructive"
               >
@@ -264,7 +264,7 @@ async function signOut() {
 
           <!-- Pending -->
           <Card v-else-if="status === 'pending'" class="border-warning/40">
-            <CardContent class="flex flex-col items-center gap-3 py-10 text-center">
+            <CardContent class="flex flex-col items-center gap-2 py-6 text-center">
               <div
                 class="flex h-12 w-12 items-center justify-center rounded-full bg-warning/15 text-warning-foreground"
               >
