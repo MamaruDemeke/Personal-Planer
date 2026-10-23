@@ -4,6 +4,8 @@ import { useAuthStore } from '@/stores/auth'
 import { useDashboardStore } from '@/stores/dashboard'
 import { api } from '@/services/api'
 import { useToast } from '@/composables/useToast'
+import { showSystemNotification } from '@/lib/notify'
+import { ring } from '@/lib/ring'
 
 /**
  * App-wide task reminders.
@@ -98,47 +100,16 @@ async function requestPermission() {
   return permission.value
 }
 
-function playRing() {
-  try {
-    const AudioCtx = window.AudioContext || window.webkitAudioContext
-    if (!AudioCtx) return
-    const ctx = new AudioCtx()
-    const now = ctx.currentTime
-    // Two short beeps for a pleasant "ring".
-    ;[0, 0.18].forEach((offset) => {
-      const osc = ctx.createOscillator()
-      const gain = ctx.createGain()
-      osc.type = 'sine'
-      osc.frequency.value = 880
-      gain.gain.setValueAtTime(0.0001, now + offset)
-      gain.gain.exponentialRampToValueAtTime(0.25, now + offset + 0.02)
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + offset + 0.16)
-      osc.connect(gain)
-      gain.connect(ctx.destination)
-      osc.start(now + offset)
-      osc.stop(now + offset + 0.18)
-    })
-    setTimeout(() => ctx.close().catch(() => {}), 600)
-  } catch {
-    /* Audio may be blocked until user interaction �?" ignore. */
-  }
-}
-
-function notify(title, body) {
-  if (supportsNotifications && window.Notification.permission === 'granted') {
-    try {
-      new window.Notification(title, { body, icon: '/favicon.svg' })
-    } catch {
-      /* Ignore restricted contexts. */
-    }
-  }
-  playRing()
+/** Ring the phone and show a native notification. */
+function notify(title, body, opts = {}) {
+  ring()
+  void showSystemNotification(title, body, opts)
 }
 
 function alertOnce(key, title, body, tone) {
   if (notified.has(key)) return false
   notified.add(key)
-  notify(title, body)
+  notify(title, body, { tag: key, sticky: tone === 'warning' })
   const toast = useToast()
   toast[tone]?.(title, body)
   return true

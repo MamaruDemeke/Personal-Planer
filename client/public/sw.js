@@ -1,5 +1,12 @@
-const CACHE = 'mezgab-v1'
-const SHELL = ['/', '/index.html', '/favicon.svg', '/manifest.json']
+const CACHE = 'mezgab-v2'
+const SHELL = [
+  '/',
+  '/index.html',
+  '/favicon.svg',
+  '/manifest.json',
+  '/icons/icon-192.png',
+  '/icons/icon-512.png',
+]
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).catch(() => {}))
@@ -32,5 +39,24 @@ self.addEventListener('fetch', (e) => {
         })
         .catch(() => caches.match('/index.html'))
     }),
+  )
+})
+
+// Tapping a reminder notification opens (or focuses) the app.
+self.addEventListener('notificationclick', (e) => {
+  e.notification.close()
+  const target = e.notification.data?.url || '/'
+  e.waitUntil(
+    (async () => {
+      const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true })
+      for (const client of windows) {
+        if ('focus' in client) {
+          await client.focus()
+          if ('navigate' in client) await client.navigate(target).catch(() => {})
+          return
+        }
+      }
+      await self.clients.openWindow(target)
+    })(),
   )
 })

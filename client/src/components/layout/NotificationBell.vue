@@ -1,7 +1,7 @@
 <script setup>
-import { computed, onBeforeUnmount, onMounted } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { Bell, BellRing, ShieldCheck, Trash2, X } from 'lucide-vue-next'
+import { Bell, BellRing, PlayCircle, ShieldCheck, Trash2, Volume2, VolumeX, X } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -17,6 +17,8 @@ import { useToast } from '@/composables/useToast'
 import { useNotificationsStore } from '@/stores/notifications'
 import { useAccessStore } from '@/stores/access'
 import { formatDue } from '@/lib/format'
+import { isSoundEnabled, ring, setSoundEnabled, unlockAudio } from '@/lib/ring'
+import { showSystemNotification } from '@/lib/notify'
 
 const reminders = useReminders()
 const notifications = useNotificationsStore()
@@ -62,12 +64,32 @@ function clearAll() {
 }
 
 async function enable() {
+  unlockAudio()
   const result = await reminders.requestPermission()
   if (result === 'granted') {
     toast.success('Notifications enabled', "You'll be alerted about due and overdue tasks.")
   } else if (result === 'denied') {
     toast.error('Notifications blocked', 'Allow notifications in your browser settings.')
   }
+}
+
+const soundOn = ref(isSoundEnabled())
+
+function toggleSound() {
+  unlockAudio()
+  soundOn.value = setSoundEnabled(!soundOn.value)
+}
+
+async function testAlert() {
+  unlockAudio()
+  ring({ force: true })
+  const shown = await showSystemNotification(
+    'Mezgab reminder',
+    'This is how a task reminder will ring and appear on your phone.',
+    { tag: 'mezgab-test', sticky: true },
+  )
+  if (shown) toast.info('Test notification sent', 'Check your notification shade.')
+  else toast.warning('Sound played', 'Allow notifications to also show the system alert.')
 }
 </script>
 
@@ -204,6 +226,23 @@ async function enable() {
       >
         <Bell class="h-4 w-4" />
         Enable browser notifications
+      </DropdownMenuItem>
+      <DropdownMenuItem
+        v-if="reminders.supported && enabled"
+        class="justify-center text-primary focus:text-primary"
+        @select="testAlert"
+      >
+        <PlayCircle class="h-4 w-4" />
+        Test ring &amp; notification
+      </DropdownMenuItem>
+      <DropdownMenuItem
+        v-if="reminders.supported"
+        class="justify-center"
+        @select="toggleSound"
+      >
+        <Volume2 v-if="soundOn" class="h-4 w-4" />
+        <VolumeX v-else class="h-4 w-4" />
+        {{ soundOn ? 'Turn ring sound off' : 'Turn ring sound on' }}
       </DropdownMenuItem>
     </DropdownMenuContent>
   </DropdownMenu>

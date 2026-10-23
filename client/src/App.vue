@@ -4,9 +4,18 @@ import { Toaster } from 'vue-sonner'
 import { setLockedHandler } from '@/services/api'
 import { useToast } from '@/composables/useToast'
 import { useAccessStore } from '@/stores/access'
+import { unlockAudio } from '@/lib/ring'
 
 const toast = useToast()
 const access = useAccessStore()
+
+/** Browsers block audio until the user interacts, so unlock once on first use. */
+function unlock() {
+  unlockAudio()
+  window.removeEventListener('pointerdown', unlock)
+  window.removeEventListener('keydown', unlock)
+  window.removeEventListener('touchstart', unlock)
+}
 
 /**
  * Last-resort error surface: any promise rejection that reaches the top level
@@ -29,10 +38,16 @@ onMounted(() => {
     access.load(true).catch(() => {})
   })
   window.addEventListener('unhandledrejection', onUnhandledRejection)
+  window.addEventListener('pointerdown', unlock)
+  window.addEventListener('keydown', unlock)
+  window.addEventListener('touchstart', unlock, { passive: true })
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('unhandledrejection', onUnhandledRejection)
+  window.removeEventListener('pointerdown', unlock)
+  window.removeEventListener('keydown', unlock)
+  window.removeEventListener('touchstart', unlock)
 })
 </script>
 
