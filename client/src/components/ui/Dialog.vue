@@ -29,23 +29,23 @@ const emit = defineEmits(['update:open'])
       <DialogContent
         :class="
           cn(
-            'fixed left-1/2 top-1/2 z-50 grid w-full max-w-lg -translate-x-1/2 -translate-y-1/2 gap-3 border border-border bg-card p-4 shadow-lg sm:rounded-xl sm:p-5',
-            'max-h-[90vh] overflow-y-auto scrollbar-thin animate-slide-up',
+            'fixed left-1/2 top-1/2 z-50 grid w-full max-w-lg -translate-x-1/2 -translate-y-1/2 gap-2 border border-border bg-card p-3 shadow-lg sm:rounded-lg sm:p-4',
+            'max-h-[92vh] overflow-y-auto scrollbar-thin animate-slide-up',
             $props.class,
           )
         "
       >
-        <div class="flex flex-col space-y-1 text-left">
-          <DialogTitle v-if="title" class="text-base font-semibold leading-none tracking-tight">
+        <div class="flex flex-col space-y-0.5 text-left">
+          <DialogTitle v-if="title" class="text-sm font-semibold leading-none tracking-tight">
             {{ title }}
           </DialogTitle>
-          <DialogDescription v-if="description" class="text-xs text-muted-foreground">
+          <DialogDescription v-if="description" class="text-[11px] text-muted-foreground">
             {{ description }}
           </DialogDescription>
         </div>
         <slot />
         <DialogClose
-          class="absolute right-3 top-3 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+          class="absolute right-2 top-2 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
           aria-label="Close"
         >
           <X class="h-4 w-4" />

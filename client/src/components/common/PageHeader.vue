@@ -1,10 +1,20 @@
 <script setup>
+import { computed } from 'vue'
 import { cn } from '@/lib/utils'
 
 const props = defineProps({
   title: { type: String, required: true },
   description: { type: String, default: '' },
+  accent: { type: String, default: '' },
   class: { type: null, default: '' },
+})
+
+const barStyle = computed(() => {
+  const base = props.accent || 'var(--page-accent, #0d9488)'
+  return {
+    background: `linear-gradient(180deg, ${base}, color-mix(in oklab, ${base} 35%, white))`,
+    boxShadow: `0 0 8px color-mix(in oklab, ${base} 45%, transparent)`,
+  }
 })
 </script>
 
@@ -14,10 +24,7 @@ const props = defineProps({
   >
     <div class="space-y-0.5">
       <h1 class="flex items-center gap-2 text-base font-semibold tracking-tight sm:text-lg">
-        <span
-          class="h-4 w-1.5 shrink-0 rounded-full bg-gradient-to-b from-primary to-info sm:h-5"
-          aria-hidden="true"
-        />
+        <span class="h-4 w-1.5 shrink-0 rounded-full sm:h-5" :style="barStyle" aria-hidden="true" />
         <span class="truncate">{{ title }}</span>
       </h1>
       <p v-if="description || $slots.description" class="text-xs text-muted-foreground">

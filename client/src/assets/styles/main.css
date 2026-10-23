@@ -1,10 +1,10 @@
-@import 'tailwindcss';
+﻿@import 'tailwindcss';
 @import 'tw-animate-css';
 
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: oklch(0.99 0.002 250);
+  --background: oklch(0.96 0.014 250);
   --foreground: oklch(0.21 0.02 250);
 
   --card: oklch(1 0 0);
@@ -17,11 +17,11 @@
   --primary: oklch(0.62 0.13 165);
   --primary-foreground: oklch(0.99 0.01 165);
 
-  --secondary: oklch(0.96 0.01 250);
+  --secondary: oklch(0.93 0.015 250);
   --secondary-foreground: oklch(0.28 0.02 250);
 
-  --muted: oklch(0.96 0.008 250);
-  --muted-foreground: oklch(0.55 0.02 250);
+  --muted: oklch(0.94 0.012 250);
+  --muted-foreground: oklch(0.5 0.025 250);
 
   --accent: oklch(0.95 0.03 165);
   --accent-foreground: oklch(0.35 0.08 165);
@@ -44,9 +44,14 @@
   --pink-foreground: oklch(0.99 0.01 350);
   --cyan: oklch(0.65 0.13 210);
   --cyan-foreground: oklch(0.99 0.01 210);
+  --indigo: oklch(0.56 0.19 275);
+  --indigo-foreground: oklch(0.99 0.01 275);
+  --orange: oklch(0.7 0.17 55);
+  --orange-foreground: oklch(0.99 0.01 55);
 
-  --border: oklch(0.92 0.008 250);
-  --input: oklch(0.92 0.008 250);
+
+  --border: oklch(0.88 0.018 250);
+  --input: oklch(0.86 0.02 250);
   --ring: oklch(0.62 0.13 165);
 
   --sidebar: oklch(0.98 0.006 165);
@@ -59,23 +64,23 @@
 }
 
 .dark {
-  --background: oklch(0.18 0.015 250);
+  --background: oklch(0.16 0.015 250);
   --foreground: oklch(0.96 0.005 250);
 
-  --card: oklch(0.22 0.015 250);
+  --card: oklch(0.235 0.016 250);
   --card-foreground: oklch(0.96 0.005 250);
 
-  --popover: oklch(0.22 0.015 250);
+  --popover: oklch(0.235 0.016 250);
   --popover-foreground: oklch(0.96 0.005 250);
 
   --primary: oklch(0.7 0.14 165);
   --primary-foreground: oklch(0.15 0.03 165);
 
-  --secondary: oklch(0.28 0.015 250);
+  --secondary: oklch(0.3 0.016 250);
   --secondary-foreground: oklch(0.96 0.005 250);
 
-  --muted: oklch(0.27 0.015 250);
-  --muted-foreground: oklch(0.7 0.015 250);
+  --muted: oklch(0.29 0.016 250);
+  --muted-foreground: oklch(0.72 0.015 250);
 
   --accent: oklch(0.32 0.04 165);
   --accent-foreground: oklch(0.9 0.05 165);
@@ -98,9 +103,14 @@
   --pink-foreground: oklch(0.15 0.03 350);
   --cyan: oklch(0.72 0.12 210);
   --cyan-foreground: oklch(0.15 0.03 210);
+  --indigo: oklch(0.66 0.17 275);
+  --indigo-foreground: oklch(0.15 0.03 275);
+  --orange: oklch(0.76 0.15 55);
+  --orange-foreground: oklch(0.15 0.03 55);
 
-  --border: oklch(0.3 0.015 250);
-  --input: oklch(0.32 0.015 250);
+
+  --border: oklch(0.33 0.018 250);
+  --input: oklch(0.36 0.02 250);
   --ring: oklch(0.7 0.14 165);
 
   --sidebar: oklch(0.2 0.015 165);
@@ -139,6 +149,10 @@
   --color-pink-foreground: var(--pink-foreground);
   --color-cyan: var(--cyan);
   --color-cyan-foreground: var(--cyan-foreground);
+  --color-indigo: var(--indigo);
+  --color-indigo-foreground: var(--indigo-foreground);
+  --color-orange: var(--orange);
+  --color-orange-foreground: var(--orange-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -167,7 +181,7 @@
   html {
     /* Compact scale: every rem-based size (text, padding, gaps, icons)
        shrinks together so more content fits on one page. */
-    font-size: 14px;
+    font-size: 13px;
     scroll-behavior: smooth;
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
@@ -314,3 +328,4 @@
     transform: none;
   }
 }
+

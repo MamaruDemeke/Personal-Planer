@@ -22,6 +22,12 @@ const viewYear = ref(ethToday.year)
 const viewMonth = ref(ethToday.month)
 const showYear = ref(false)
 
+const MONTH_COLORS = [
+  '#0d9488', '#3b82f6', '#8b5cf6', '#f59e0b', '#ec4899', '#06b6d4',
+  '#22c55e', '#ef4444', '#6366f1', '#f97316', '#14b8a6', '#a855f7', '#eab308',
+]
+const monthColor = (idx) => MONTH_COLORS[idx % MONTH_COLORS.length]
+
 const monthName = computed(() => ETHIOPIAN_MONTHS[viewMonth.value - 1])
 const monthNameAm = computed(() => ETHIOPIAN_MONTHS_AMHARIC[viewMonth.value - 1])
 
@@ -82,10 +88,14 @@ function goToday() {
         :key="mn"
         type="button"
         class="rounded-lg border bg-card p-3 text-left transition-colors hover:border-primary/40"
-        :class="viewMonth === idx + 1 && 'border-primary bg-primary/5'"
+        :class="viewMonth === idx + 1 && 'bg-primary/5'"
+        :style="{
+          borderTopWidth: '3px',
+          borderTopColor: `color-mix(in oklab, ${monthColor(idx)} 75%, transparent)`,
+        }"
         @click="viewMonth = idx + 1; showYear = false"
       >
-        <p class="text-sm font-semibold">{{ mn }}</p>
+        <p class="text-sm font-semibold" :style="{ color: monthColor(idx) }">{{ mn }}</p>
         <p class="text-xs text-muted-foreground">{{ ETHIOPIAN_MONTHS_AMHARIC[idx] }}</p>
         <p class="mt-1 text-xs text-muted-foreground">{{ daysInEthiopianMonth(viewYear, idx + 1) }} days</p>
       </button>

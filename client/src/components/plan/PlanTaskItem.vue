@@ -20,7 +20,7 @@ const completed = computed(() => props.task.isCompleted ?? props.task.status ===
   <div
     :class="
       cn(
-        'flex items-center gap-2 rounded-md border bg-card px-2.5 py-1.5 text-sm transition-colors hover:border-primary/40',
+        'flex items-center gap-2 rounded-md border bg-card px-2.5 py-1.5 text-sm transition-all hover:-translate-y-px hover:border-primary/50 hover:shadow-sm hover:shadow-primary/10',
         completed && 'opacity-70',
       )
     "

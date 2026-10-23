@@ -245,7 +245,7 @@ async function signOut() {
           </div>
 
           <!-- Revoked -->
-          <Card v-if="revoked" class="border-destructive/30">
+          <Card v-if="revoked" accent="#ef4444" class="border-destructive/30">
             <CardContent class="flex flex-col items-center gap-2 py-6 text-center">
               <div
                 class="flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10 text-destructive"
@@ -263,7 +263,7 @@ async function signOut() {
           </Card>
 
           <!-- Pending -->
-          <Card v-else-if="status === 'pending'" class="border-warning/40">
+          <Card v-else-if="status === 'pending'" accent="#f59e0b" class="border-warning/40">
             <CardContent class="flex flex-col items-center gap-2 py-6 text-center">
               <div
                 class="flex h-12 w-12 items-center justify-center rounded-full bg-warning/15 text-warning-foreground"

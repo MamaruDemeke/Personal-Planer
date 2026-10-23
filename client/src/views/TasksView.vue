@@ -255,7 +255,7 @@ function toggleComplete(task) {
 </script>
 
 <template>
-  <div class="space-y-4 sm:space-y-6">
+  <div class="space-y-2 sm:space-y-3">
     <PageHeader :title="t('page.tasks.title')" :description="t('page.tasks.desc')">
       <template #actions>
         <div class="flex items-center gap-1 rounded-md border p-0.5">

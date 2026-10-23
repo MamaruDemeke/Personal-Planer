@@ -105,7 +105,7 @@ async function remove() {
 </script>
 
 <template>
-  <div class="space-y-4 sm:space-y-6">
+  <div class="space-y-2 sm:space-y-3">
     <PageHeader :title="t('page.diary.title')" :description="t('page.diary.desc')">
       <template #actions>
           <Button @click="newNote">
@@ -118,7 +118,7 @@ async function remove() {
 
     <div v-else class="grid gap-4 lg:grid-cols-3">
       <!-- List -->
-      <Card class="lg:col-span-1">
+      <Card class="group card-hover lg:col-span-1" accent="#ec4899">
         <CardContent class="space-y-3 pt-4">
           <div class="relative">
             <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -156,7 +156,7 @@ async function remove() {
       </Card>
 
       <!-- Editor -->
-      <Card class="lg:col-span-2">
+      <Card class="group card-hover lg:col-span-2" accent="#8b5cf6">
         <CardContent class="space-y-4 pt-4">
           <div class="space-y-1.5">
             <Label for="note-title">{{ t('diary.title') }}</Label>

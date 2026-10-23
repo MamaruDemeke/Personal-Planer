@@ -7,11 +7,15 @@ import {
   Loader2,
   LogOut,
   Moon,
+  Palette,
   Plus,
   Save,
+  ShieldCheck,
   Sun,
   Pencil,
+  Tags,
   Trash2,
+  User,
 } from 'lucide-vue-next'
 
 import PageHeader from '@/components/common/PageHeader.vue'
@@ -135,13 +139,18 @@ async function signOut() {
 </script>
 
 <template>
-  <div class="space-y-4 sm:space-y-6">
+  <div class="space-y-2 sm:space-y-3">
     <PageHeader :title="t('page.settings.title')" :description="t('page.settings.desc')" />
 
     <!-- Profile -->
     <Card>
       <CardHeader>
-          <CardTitle class="text-base">{{ t('settings.profile') }}</CardTitle>
+          <CardTitle class="flex items-center gap-1.5 text-base">
+            <span class="flex h-5 w-5 items-center justify-center rounded bg-blue-500/10 text-blue-600 dark:text-blue-400">
+              <User class="h-3 w-3" />
+            </span>
+            {{ t('settings.profile') }}
+          </CardTitle>
         <CardDescription>Your name and timezone.</CardDescription>
       </CardHeader>
       <CardContent class="space-y-4 pt-0">
@@ -166,7 +175,12 @@ async function signOut() {
     <!-- Appearance -->
     <Card>
       <CardHeader>
-          <CardTitle class="text-base">{{ t('settings.appearance') }}</CardTitle>
+          <CardTitle class="flex items-center gap-1.5 text-base">
+            <span class="flex h-5 w-5 items-center justify-center rounded bg-violet-500/10 text-violet-600 dark:text-violet-400">
+              <Palette class="h-3 w-3" />
+            </span>
+            {{ t('settings.appearance') }}
+          </CardTitle>
         <CardDescription>Switch between light and dark themes.</CardDescription>
       </CardHeader>
       <CardContent class="pt-0">
@@ -181,7 +195,12 @@ async function signOut() {
     <!-- Notifications -->
     <Card>
       <CardHeader>
-          <CardTitle class="text-base">{{ t('settings.reminders') }}</CardTitle>
+          <CardTitle class="flex items-center gap-1.5 text-base">
+            <span class="flex h-5 w-5 items-center justify-center rounded bg-amber-500/10 text-amber-600 dark:text-amber-400">
+              <Bell class="h-3 w-3" />
+            </span>
+            {{ t('settings.reminders') }}
+          </CardTitle>
         <CardDescription>Get alerted about due and overdue tasks.</CardDescription>
       </CardHeader>
       <CardContent class="flex flex-wrap items-center gap-3 pt-0">
@@ -206,7 +225,12 @@ async function signOut() {
     <Card>
       <CardHeader class="flex-row items-center justify-between space-y-0">
         <div class="space-y-1">
-          <CardTitle class="text-base">{{ t('settings.categories') }}</CardTitle>
+            <CardTitle class="flex items-center gap-1.5 text-base">
+              <span class="flex h-5 w-5 items-center justify-center rounded bg-pink-500/10 text-pink-600 dark:text-pink-400">
+                <Tags class="h-3 w-3" />
+              </span>
+              {{ t('settings.categories') }}
+            </CardTitle>
           <CardDescription>Group tasks by type of work.</CardDescription>
         </div>
         <Button variant="outline" size="sm" @click="openCreateCategory">
@@ -240,7 +264,12 @@ async function signOut() {
     <!-- Account -->
     <Card>
       <CardHeader>
-          <CardTitle class="text-base">{{ t('settings.account') }}</CardTitle>
+          <CardTitle class="flex items-center gap-1.5 text-base">
+            <span class="flex h-5 w-5 items-center justify-center rounded bg-slate-500/10 text-slate-600 dark:text-slate-300">
+              <ShieldCheck class="h-3 w-3" />
+            </span>
+            {{ t('settings.account') }}
+          </CardTitle>
         <CardDescription>{{ auth.user?.email ?? 'Not signed in' }}</CardDescription>
       </CardHeader>
       <CardContent class="pt-0">

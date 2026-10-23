@@ -190,7 +190,7 @@ function printReport() {
 </script>
 
 <template>
-  <div class="space-y-4 sm:space-y-6">
+  <div class="space-y-2 sm:space-y-3">
     <PageHeader :title="`${(PERIODS.find((p) => p.value === period) || PERIODS[0]).label} Reports`" description="Record what you did, blocked on, and plan for the next period.">
       <template #actions>
         <div class="flex items-center gap-1 rounded-md border p-0.5">
@@ -226,7 +226,7 @@ function printReport() {
     </PageHeader>
 
     <div class="grid gap-4 lg:grid-cols-3">
-      <Card class="lg:col-span-2">
+      <Card class="group card-hover lg:col-span-2" accent="#6366f1">
         <CardContent class="space-y-4 pt-4">
           <div class="grid gap-4 sm:grid-cols-2">
             <div class="space-y-1.5">
@@ -263,9 +263,16 @@ function printReport() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card class="group card-hover" accent="#06b6d4">
         <CardHeader>
-          <CardTitle class="text-base">{{ t('reports.recentReports') }}</CardTitle>
+            <CardTitle class="flex items-center gap-1.5 text-base">
+              <span
+                class="flex h-5 w-5 items-center justify-center rounded bg-indigo-500/10 text-indigo-600 dark:text-indigo-400"
+              >
+                <FileText class="h-3 w-3" />
+              </span>
+              {{ t('reports.recentReports') }}
+            </CardTitle>
         </CardHeader>
         <CardContent class="pt-0">
           <LoadingState v-if="reports.loading && !reports.loaded" :rows="4" />

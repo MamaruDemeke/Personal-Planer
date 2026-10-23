@@ -6,6 +6,7 @@ import { api } from '@/services/api'
 import { useToast } from '@/composables/useToast'
 import { showSystemNotification } from '@/lib/notify'
 import { ring } from '@/lib/ring'
+import { saveTasks, loadCachedTasks, deriveSummary } from '@/lib/reminderCache'
 
 /**
  * App-wide task reminders.
@@ -19,6 +20,7 @@ import { ring } from '@/lib/ring'
 const STORAGE_KEY = 'mezgab-reminders'
 const DISMISSED_KEY = 'mezgab-reminders-dismissed'
 const CHECK_INTERVAL = 5 * 60 * 1000
+const TICK_INTERVAL = 30 * 1000
 const DUE_WINDOW = 24 * 60 * 60 * 1000
 
 const supportsNotifications =
@@ -32,6 +34,7 @@ const enabled = ref(supportsNotifications && window.Notification?.permission ===
 
 let notified = loadNotified()
 let timer = null
+let tick = null
 const reminderTimers = []
 
 function loadDismissed() {
@@ -142,11 +145,12 @@ function evaluate() {
     }
   }
 
-  // Per-task reminders (ring at the chosen time).
+  // Per-task reminders (ring at the chosen time, based on the phone clock).
   for (const task of reminded.value) {
     if (!task.reminderAt) continue
     const at = new Date(task.reminderAt).getTime()
-    if (at <= now + 60 * 1000) {
+    // Only remind for the last day so old reminders don't ring again daily.
+    if (at <= now + 60 * 1000 && at >= now - DUE_WINDOW) {
       alertOnce(
         dayKey('reminder', task.id),
         `Reminder: ${task.title}`,
@@ -159,19 +163,20 @@ function evaluate() {
   persistNotified()
 }
 
-async function refresh() {
-  const dashboard = useDashboardStore()
-  const summary = await dashboard.load({ force: true })
-  overdue.value = summary?.overdueTasks ?? []
-  upcoming.value = summary?.upcoming ?? []
-  try {
-    const tasks = (await api.get('/tasks')) ?? []
-    reminded.value = tasks.filter((t) => t.reminderAt)
-  } catch {
-    reminded.value = []
-  }
+/** Arm reminders from the offline cache before (or without) any network call. */
+function hydrateFromCache() {
+  const tasks = loadCachedTasks()
+  if (!tasks.length) return
+  const derived = deriveSummary(tasks)
+  overdue.value = derived.overdueTasks
+  upcoming.value = derived.upcoming
+  reminded.value = tasks.filter((t) => t.reminderAt)
+  scheduleReminders()
+  evaluate()
+}
 
-  // Clear previously scheduled reminder timers.
+/** Schedule an exact ring for every task reminder that is due today. */
+function scheduleReminders() {
   while (reminderTimers.length) {
     clearTimeout(reminderTimers.pop())
   }
@@ -193,15 +198,77 @@ async function refresh() {
       reminderTimers.push(id)
     }
   }
+}
 
+let refreshing = false
+
+/**
+ * Refresh from the API and fall back to the offline cache. Works with no
+ * network: reminders are then scheduled from the cached tasks using the
+ * phone's clock.
+ */
+async function refresh() {
+  if (refreshing) return
+  refreshing = true
+  try {
+    const dashboard = useDashboardStore()
+
+    let tasks = null
+    try {
+      tasks = (await api.get('/tasks')) ?? []
+      saveTasks(tasks)
+    } catch {
+      tasks = loadCachedTasks()
+    }
+
+    let summary = null
+    try {
+      summary = await dashboard.load({ force: true })
+    } catch {
+      summary = null
+    }
+
+    if (summary) {
+      overdue.value = summary.overdueTasks ?? []
+      upcoming.value = summary.upcoming ?? []
+    } else {
+      const derived = deriveSummary(tasks)
+      overdue.value = derived.overdueTasks
+      upcoming.value = derived.upcoming
+    }
+
+    reminded.value = (tasks ?? []).filter((t) => t.reminderAt)
+    scheduleReminders()
+    evaluate()
+  } finally {
+    refreshing = false
+  }
+}
+
+function onVisibilityChange() {
+  if (document.visibilityState !== 'visible') return
   evaluate()
+  refresh().catch(() => {})
+}
+
+function onOnline() {
+  refresh().catch(() => {})
 }
 
 async function start() {
   const auth = useAuthStore()
-  if (!auth.isAuthenticated || timer) return
+  if (!auth.isAuthenticated) return
+  if (!timer) {
+    timer = setInterval(() => refresh().catch(() => {}), CHECK_INTERVAL)
+  }
+  if (!tick) {
+    // Cheap local check so a throttled timer still rings when the phone wakes.
+    tick = setInterval(() => evaluate(), TICK_INTERVAL)
+  }
+  window.addEventListener('online', onOnline)
+  document.addEventListener('visibilitychange', onVisibilityChange)
+  hydrateFromCache()
   await refresh().catch(() => {})
-  timer = setInterval(() => refresh().catch(() => {}), CHECK_INTERVAL)
 }
 
 function stop() {
@@ -209,6 +276,12 @@ function stop() {
     clearInterval(timer)
     timer = null
   }
+  if (tick) {
+    clearInterval(tick)
+    tick = null
+  }
+  window.removeEventListener('online', onOnline)
+  document.removeEventListener('visibilitychange', onVisibilityChange)
 }
 
 /** Reminders the user has not dismissed yet. */

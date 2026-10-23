@@ -63,10 +63,10 @@ const { t } = useI18n()
 
 const PERIOD_LABELS = { daily: 'Daily', weekly: 'Weekly', monthly: 'Monthly', yearly: 'Yearly' }
 const PERIOD_OPTIONS = [
-  { value: 'daily', label: 'Daily' },
-  { value: 'weekly', label: 'Weekly' },
-  { value: 'monthly', label: 'Monthly' },
-  { value: 'yearly', label: 'Yearly' },
+  { value: 'daily', label: 'Daily', color: '#3b82f6' },
+  { value: 'weekly', label: 'Weekly', color: '#8b5cf6' },
+  { value: 'monthly', label: 'Monthly', color: '#f59e0b' },
+  { value: 'yearly', label: 'Yearly', color: '#22c55e' },
 ]
 const PERIOD_DESCRIPTIONS = {
   daily: 'Plan and track today’s work.',
@@ -429,22 +429,10 @@ function resetFilters() {
 </script>
 
 <template>
-  <div class="space-y-4 sm:space-y-6">
+  <div class="space-y-2 sm:space-y-3">
     <PageHeader :title="heading" :description="`${label} · ${PERIOD_DESCRIPTIONS[period]}`">
       <template #actions>
         <div class="flex flex-wrap items-center gap-1">
-        <div class="mr-1 flex rounded-lg border border-blue-200 bg-blue-50 p-0.5 dark:border-blue-800 dark:bg-blue-950/40">
-          <Button
-            v-for="opt in PERIOD_OPTIONS"
-            :key="opt.value"
-            size="sm"
-            :variant="period === opt.value ? 'default' : 'ghost'"
-            class="h-7 px-2.5 text-xs"
-            @click="setPeriod(opt.value)"
-          >
-            {{ opt.label }}
-          </Button>
-        </div>
           <Button variant="outline" size="icon" aria-label="Previous" @click="shift(-1)">
             <ChevronLeft class="h-4 w-4" />
           </Button>
@@ -481,13 +469,18 @@ function resetFilters() {
     />
 
     <template v-else>
-      <div class="flex gap-1 rounded-lg border border-blue-200 bg-blue-50 p-0.5 dark:border-blue-800 dark:bg-blue-950/40">
+      <div class="flex gap-1 rounded-lg border bg-muted/60 p-0.5">
         <Button
           v-for="opt in PERIOD_OPTIONS"
           :key="opt.value"
           size="sm"
-          :variant="period === opt.value ? 'default' : 'ghost'"
-          class="h-7 flex-1 px-2.5 text-xs"
+          variant="ghost"
+          class="h-7 flex-1 px-2.5 text-xs font-semibold"
+          :style="
+            period === opt.value
+              ? { backgroundColor: opt.color, color: '#fff' }
+              : { color: opt.color }
+          "
           @click="setPeriod(opt.value)"
         >
           {{ opt.label }}

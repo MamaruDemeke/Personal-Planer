@@ -77,7 +77,7 @@ function goToPayment() {
       </template>
     </PageHeader>
 
-    <Card v-if="locked" class="border-warning/40 bg-warning/5">
+    <Card v-if="locked" accent="#f59e0b" class="border-warning/40 bg-warning/5">
       <CardContent class="flex items-center justify-between gap-3 py-3">
         <div class="flex items-center gap-2">
           <component :is="lockInfo.icon" class="h-4 w-4 text-warning" />

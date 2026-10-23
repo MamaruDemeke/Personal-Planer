@@ -49,13 +49,13 @@ export const STATUS_LABELS = toMap(TASK_STATUSES)
 export const PLAN_LABELS = toMap(TASK_PLANS)
 
 /** Badge variant per priority. */
-export const PRIORITY_BADGE = { low: 'info', medium: 'warning', high: 'destructive' }
+export const PRIORITY_BADGE = { low: 'success', medium: 'warning', high: 'destructive' }
 
 /** Badge variant per plan horizon. */
 export const PLAN_BADGE = {
   daily: 'info',
   weekly: 'purple',
-  monthly: 'warning',
+  monthly: 'orange',
   yearly: 'success',
 }
 
@@ -65,7 +65,7 @@ export const PLAN_BADGE = {
  */
 export const STATUS_BADGE = {
   not_started: 'muted',
-  in_progress: 'info',
+  in_progress: 'cyan',
   completed: 'success',
   overdue: 'destructive',
 }

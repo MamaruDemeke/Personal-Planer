@@ -57,7 +57,7 @@ function lateLabel(row) {
 </script>
 
 <template>
-  <div class="space-y-4 sm:space-y-5">
+  <div class="space-y-2 sm:space-y-3">
     <PageHeader
       title="Progress & Reports"
       description="Completion percentages, real completion times, delayed tasks and daily or weekly reports."
@@ -127,7 +127,7 @@ function lateLabel(row) {
 
       <!-- Period rollup + category completion -->
       <div class="grid gap-3 lg:grid-cols-2">
-        <Card>
+        <Card class="group card-hover" accent="#3b82f6">
           <CardHeader class="flex-row items-center justify-between space-y-0">
             <CardTitle class="flex items-center gap-2 text-base">
               <TrendingUp class="h-4 w-4 text-primary" />
@@ -166,7 +166,7 @@ function lateLabel(row) {
           </CardContent>
         </Card>
 
-        <Card>
+<Card class="group card-hover" accent="#f59e0b">
           <CardHeader>
             <CardTitle class="text-base">Completion by category</CardTitle>
           </CardHeader>
@@ -207,7 +207,7 @@ function lateLabel(row) {
 
       <!-- Actual completion times + delayed tasks -->
       <div class="grid gap-3 lg:grid-cols-2">
-        <Card>
+        <Card class="group card-hover" accent="#3b82f6">
           <CardHeader class="flex-row items-center justify-between space-y-0">
             <CardTitle class="flex items-center gap-2 text-base">
               <Timer class="h-4 w-4 text-info" />
@@ -243,7 +243,7 @@ function lateLabel(row) {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card class="group card-hover" accent="#3b82f6">
           <CardHeader class="flex-row items-center justify-between space-y-0">
             <CardTitle class="flex items-center gap-2 text-base">
               <AlertTriangle class="h-4 w-4 text-destructive" />

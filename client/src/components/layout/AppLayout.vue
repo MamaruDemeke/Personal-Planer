@@ -1,6 +1,6 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import { RouterView, useRouter } from 'vue-router'
+import { RouterView, useRoute, useRouter } from 'vue-router'
 import { Lock, Receipt } from 'lucide-vue-next'
 import AppHeader from './AppHeader.vue'
 import AppSidebar from './AppSidebar.vue'
@@ -9,11 +9,20 @@ import PwaInstallPrompt from './PwaInstallPrompt.vue'
 import { Button } from '@/components/ui/button'
 import { useAccessStore } from '@/stores/access'
 import { useReminders } from '@/composables/useReminders'
+import { navSections } from '@/lib/navigation'
 
 const router = useRouter()
+const route = useRoute()
 const access = useAccessStore()
 const sidebarOpen = ref(false)
 const reminders = useReminders()
+
+const ACCENTS = {
+  ...Object.fromEntries(navSections.flatMap((s) => s.items).map((i) => [i.to.name, i.color])),
+  access: '#e11d48',
+  admin: '#ef4444',
+}
+const pageAccent = computed(() => ACCENTS[route.name] ?? '#0d9488')
 
 onMounted(() => reminders.start())
 onBeforeUnmount(() => reminders.stop())
@@ -41,13 +50,17 @@ function goToPayment() {
 </script>
 
 <template>
-  <div class="min-h-screen bg-background">
+  <div class="min-h-screen bg-background" :style="{ '--page-accent': pageAccent }">
     <AppSidebar :open="sidebarOpen" @close="sidebarOpen = false" />
 
-    <div class="lg:pl-64">
+    <div class="lg:pl-56">
       <AppHeader @toggle-sidebar="sidebarOpen = !sidebarOpen" />
-      <main class="px-3 py-3 pb-20 sm:px-4 sm:py-4 sm:pb-20 lg:px-6 lg:pb-4">
-        <div class="mx-auto w-full max-w-5xl space-y-3 sm:space-y-4">
+      <main class="relative px-2 py-2 pb-16 sm:px-3 sm:py-3 sm:pb-16 lg:px-4 lg:pb-3">
+        <div
+          class="pointer-events-none absolute inset-x-0 top-0 h-40 bg-[radial-gradient(560px_150px_at_20%_0%,var(--page-accent),transparent_72%)] opacity-[0.13] dark:opacity-20"
+          aria-hidden="true"
+        />
+        <div class="relative mx-auto w-full max-w-5xl space-y-2 sm:space-y-3">
           <div
             v-if="locked"
             class="flex flex-col gap-2 rounded-lg border border-warning/40 bg-warning/5 p-2.5 sm:flex-row sm:items-center sm:justify-between"

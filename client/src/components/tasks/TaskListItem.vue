@@ -28,7 +28,9 @@ const progressColor = computed(() => {
 </script>
 
 <template>
-  <li class="rounded-lg border bg-card p-3 transition-colors hover:border-primary/40">
+  <li
+    class="group rounded-lg border bg-card p-3 transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-md hover:shadow-primary/10"
+  >
     <div class="flex items-start gap-3">
       <button
         type="button"

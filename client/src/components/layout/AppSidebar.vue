@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from 'vue'
+import { useRoute } from 'vue-router'
 import { X, HardHat } from 'lucide-vue-next'
 import { buildNavSections } from '@/lib/navigation'
 import { useAccessStore } from '@/stores/access'
@@ -12,8 +13,10 @@ defineProps({
 const emit = defineEmits(['close'])
 
 const access = useAccessStore()
+const route = useRoute()
 const { t } = useI18n()
 const sections = computed(() => buildNavSections({ isAdmin: access.isAdmin, locked: access.isLocked }))
+const isActive = (item) => route.name === item.to.name
 </script>
 
 <template>
@@ -35,22 +38,22 @@ const sections = computed(() => buildNavSections({ isAdmin: access.isAdmin, lock
   <aside
     :class="
       cn(
-        'fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r bg-gradient-to-b from-[#DBEAFE] via-[#EFF6FF] to-white transition-transform duration-200 lg:translate-x-0',
+        'fixed inset-y-0 left-0 z-50 flex w-56 flex-col border-r border-blue-200/70 bg-gradient-to-b from-[#E0F2FE] via-[#F1F0FF] to-[#ECFDF5] transition-transform duration-200 dark:border-slate-700 dark:from-[#16232e] dark:via-[#1b1b2e] dark:to-[#122320] lg:translate-x-0',
         open ? 'translate-x-0' : '-translate-x-full',
       )
     "
     aria-label="Primary"
   >
-    <div class="flex h-12 items-center gap-2 border-b border-blue-200 px-3 sm:h-14">
+    <div class="flex h-10 items-center gap-2 border-b border-blue-200/70 px-2.5 sm:h-12 dark:border-slate-700">
       <span
-        class="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-info text-primary-foreground shadow-sm shadow-primary/30"
+        class="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-info text-primary-foreground shadow-sm shadow-primary/30"
       >
-        <HardHat class="h-4 w-4" />
+        <HardHat class="h-3.5 w-3.5" />
       </span>
-      <span class="text-base font-bold tracking-tight text-slate-900">{{ t('app.title') }}</span>
+      <span class="text-[15px] font-bold tracking-tight text-slate-900 dark:text-slate-100">{{ t('app.title') }}</span>
       <button
         type="button"
-        class="ml-auto rounded-md p-1.5 text-slate-700 transition-colors hover:bg-blue-200/60 lg:hidden"
+        class="ml-auto rounded-md p-1.5 text-slate-700 transition-colors hover:bg-white/70 lg:hidden dark:text-slate-300 dark:hover:bg-slate-700/60"
         aria-label="Close menu"
         @click="emit('close')"
       >
@@ -60,18 +63,30 @@ const sections = computed(() => buildNavSections({ isAdmin: access.isAdmin, lock
 
     <nav class="flex-1 space-y-3.5 overflow-y-auto px-2.5 py-3">
       <div v-for="section in sections" :key="section.title" class="space-y-0.5">
-        <p class="px-2.5 text-[10px] font-semibold uppercase tracking-wider text-blue-700">
+        <p
+          class="px-2.5 text-[10px] font-semibold uppercase tracking-wider"
+          :style="{ color: section.color }"
+        >
           {{ t(section.title) }}
         </p>
         <RouterLink
           v-for="item in section.items"
           :key="item.label"
           :to="item.to"
-          class="flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] font-medium text-slate-800 transition-colors hover:bg-blue-200/60 hover:text-slate-900"
-          active-class="bg-gradient-to-r from-blue-400/40 to-indigo-400/40 text-blue-900 font-semibold shadow-sm border-l-4 border-blue-600"
+          class="flex items-center gap-2.5 rounded-md px-2 py-1.5 text-[13px] font-medium text-slate-800 transition-colors hover:bg-white/70 dark:text-slate-200 dark:hover:bg-slate-700/50"
+          :class="isActive(item) ? 'bg-white/90 shadow-sm dark:bg-slate-800/90' : ''"
+          :style="isActive(item) ? { boxShadow: `inset 3px 0 0 ${item.color}` } : {}"
           @click="emit('close')"
         >
-          <component :is="item.icon" class="h-4 w-4 shrink-0" />
+          <span
+            class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md transition-colors"
+            :style="{
+              backgroundColor: `color-mix(in oklab, ${item.color} 16%, transparent)`,
+              color: item.color,
+            }"
+          >
+            <component :is="item.icon" class="h-3.5 w-3.5" />
+          </span>
           {{ t(item.label) }}
         </RouterLink>
       </div>

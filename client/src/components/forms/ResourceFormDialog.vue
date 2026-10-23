@@ -133,7 +133,7 @@ const dialogTitle = computed(() => props.title)
     :description="props.description"
     @update:open="emit('update:open', $event)"
   >
-    <form class="space-y-4" novalidate @submit="onSubmit">
+        <form class="space-y-2.5" novalidate @submit="onSubmit">
       <div class="grid gap-4 sm:grid-cols-2">
         <div
           v-for="field in props.fields"

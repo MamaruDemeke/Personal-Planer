@@ -6,19 +6,29 @@ const props = defineProps({
   description: { type: String, default: '' },
   class: { type: null, default: '' },
 })
+
+const accent = 'var(--page-accent, var(--primary))'
 </script>
 
 <template>
   <div
     :class="
       cn(
-        'flex flex-col items-center justify-center gap-2.5 rounded-lg border border-dashed bg-card/50 px-4 py-6 text-center sm:gap-3 sm:px-6 sm:py-8',
+        'flex flex-col items-center justify-center gap-2.5 rounded-lg border border-dashed px-4 py-6 text-center sm:gap-3 sm:px-6 sm:py-8',
         props.class,
       )
     "
+    :style="{
+      borderColor: `color-mix(in oklab, ${accent} 35%, transparent)`,
+      backgroundColor: `color-mix(in oklab, ${accent} 5%, var(--card))`,
+    }"
   >
     <div
-      class="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 to-info/10 text-primary"
+      class="flex h-9 w-9 items-center justify-center rounded-full"
+      :style="{
+        backgroundColor: `color-mix(in oklab, ${accent} 15%, transparent)`,
+        color: accent,
+      }"
     >
       <slot name="icon" />
     </div>

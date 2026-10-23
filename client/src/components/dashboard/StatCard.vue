@@ -26,12 +26,12 @@ const tone = computed(() => TONES[props.tone] ?? TONES.primary)
 </script>
 
 <template>
-  <Card class="card-hover border-l-4" :style="{ borderLeftColor: tone.bar }">
+  <Card class="group card-hover border-l-4" :style="{ borderLeftColor: tone.bar }">
     <CardContent class="p-2.5 sm:p-3">
       <div class="flex items-center gap-2.5">
         <span
           v-if="icon"
-          :class="cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-md', tone.chip)"
+          :class="cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-md transition-transform group-hover:scale-110', tone.chip)"
         >
           <component :is="icon" class="h-4 w-4" />
         </span>

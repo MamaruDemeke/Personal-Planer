@@ -29,12 +29,12 @@ function width(value) {
 </script>
 
 <template>
-  <Card class="card-hover border-l-4" :style="{ borderLeftColor: tone.bar }">
+  <Card class="group card-hover border-l-4" :style="{ borderLeftColor: tone.bar }">
     <CardContent class="p-4 sm:p-5">
       <div class="flex items-center gap-4">
         <span
           v-if="icon"
-          :class="cn('flex h-12 w-12 shrink-0 items-center justify-center rounded-md', tone.chip)"
+          :class="cn('flex h-12 w-12 shrink-0 items-center justify-center rounded-md transition-transform group-hover:scale-110', tone.chip)"
         >
           <component :is="icon" class="h-6 w-6" />
         </span>

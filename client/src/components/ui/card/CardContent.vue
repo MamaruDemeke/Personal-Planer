@@ -5,7 +5,7 @@ const props = defineProps({ class: { type: null, default: '' } })
 </script>
 
 <template>
-  <div :class="cn('p-3 pt-0 sm:p-3.5 sm:pt-0', props.class)">
+  <div :class="cn('p-2.5 pt-0 sm:p-3 sm:pt-0', props.class)">
     <slot />
   </div>
 </template>

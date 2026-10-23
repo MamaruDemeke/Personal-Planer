@@ -53,11 +53,15 @@ async function onSignOut() {
 
 <template>
   <header
-    class="sticky top-0 z-30 flex h-12 items-center gap-1.5 border-b bg-background/90 px-2 backdrop-blur-md pt-[env(safe-area-inset-top)] sm:h-14 sm:gap-2 sm:px-4 lg:px-6"
+    class="sticky top-0 z-30 flex h-10 items-center gap-1 border-b bg-background/90 px-1.5 backdrop-blur-md pt-[env(safe-area-inset-top)] sm:h-12 sm:gap-1.5 sm:px-3 lg:px-4"
   >
+    <span
+      class="pointer-events-none absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-transparent via-[var(--page-accent,#0d9488)] to-transparent opacity-50"
+      aria-hidden="true"
+    />
     <button
       type="button"
-      class="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent lg:hidden"
+      class="rounded-md p-1 text-muted-foreground transition-colors hover:bg-accent lg:hidden"
       aria-label="Open menu"
       @click="emit('toggle-sidebar')"
     >
